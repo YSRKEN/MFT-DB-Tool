@@ -1,3 +1,4 @@
 server/pyvenv.cfg
 server/Lib/
 server/Scripts/
+server/service/__pycache__/
