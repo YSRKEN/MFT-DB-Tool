@@ -9,24 +9,24 @@ from service.i_database_service import IDataBaseService
 @dataclass_json
 @dataclass
 class Lens:
-    id: int
-    name: str
-    product_number: str
-    wide_focal_length: float
-    telephoto_focal_length: float
-    wide_f_number: float
-    telephoto_f_number: float
-    wide_min_focus_distance: float
-    telephoto_min_focus_distance: float
-    max_photographing_magnification: float
-    filter_diameter: float
-    is_drip_proof: bool
-    has_image_stabilization: bool
-    is_inner_zoom: bool
-    overall_diameter: float
-    overall_length: float
-    weight: float
-    price: int
+    id: int = 0
+    name: str = ''
+    product_number: str = ''
+    wide_focal_length: int = 0
+    telephoto_focal_length: int = 0
+    wide_f_number: float = 0
+    telephoto_f_number: float = 0
+    wide_min_focus_distance: float = 0
+    telephoto_min_focus_distance: float = 0
+    max_photographing_magnification: float = 0
+    filter_diameter: float = 0
+    is_drip_proof: bool = False
+    has_image_stabilization: bool = False
+    is_inner_zoom: bool = False
+    overall_diameter: float = 0
+    overall_length: float = 0
+    weight: float = 0
+    price: int = 0
 
 
 class LensService:
@@ -37,13 +37,13 @@ class LensService:
             'id INTEGER PRIMARY KEY,'                 # ID
             'name TEXT,'                              # レンズ名
             'product_number TEXT,'                    # 型番
-            'wide_focal_length REAL,'                 # 広角端の実焦点距離(mm)
-            'telephoto_focal_length REAL,'            # 望遠端の実焦点距離(mm)
+            'wide_focal_length INTEGER,'              # 広角端の換算焦点距離(mm)
+            'telephoto_focal_length INTEGER,'         # 望遠端の換算焦点距離(mm)
             'wide_f_number REAL,'                     # 広角端の開放F値
             'telephoto_f_number REAL,'                # 望遠端の開放F値
-            'wide_min_focus_distance REAL,'           # 広角端の最短撮影距離(mm)
-            'telephoto_min_focus_distance REAL,'      # 望遠端の最短撮影距離(mm)
-            'max_photographing_magnification REAL,'   # 実最大撮影倍率
+            'wide_min_focus_distance INTEGER,'        # 広角端の最短撮影距離(mm)
+            'telephoto_min_focus_distance INTEGER,'   # 望遠端の最短撮影距離(mm)
+            'max_photographing_magnification REAL,'   # 換算最大撮影倍率
             'filter_diameter REAL,'                   # フィルター径(mm)
             'is_drip_proof INTEGER,'                  # 防塵防滴ならTrue
             'has_image_stabilization INTEGER,'        # 手ブレ補正付きならTrue
@@ -52,6 +52,10 @@ class LensService:
             'overall_length REAL,'                    # レンズ全体の全長(mm)
             'weight REAL,'                            # 重量(g)
             'price INTEGER)')                         # 定価(円)
+
+    def get_data_count(self) -> int:
+        result = self.database.select('SELECT COUNT(*) FROM lens')
+        return result[0]['COUNT(*)']
 
     def find_all(self) -> List[Lens]:
         result = self.database.select('SELECT id, name, product_number, wide_focal_length, telephoto_focal_length,'
@@ -67,6 +71,9 @@ class LensService:
             lens_items: List[Tuple[str, any]] = lens.to_dict().items()
             temp1: List[str] = [x[0] for x in lens_items]
             temp2: List[any] = [x[1] for x in lens_items]
+            if lens.id == 0:
+                index = temp1.index('id')
+                temp2[index] = self.get_data_count() + 1
             temp3 = ','.join(temp1)
             temp4 = ','.join(['?' for _ in temp1])
             self.database.query(f'INSERT INTO lens ({temp3}) VALUES ({temp4})', temp2)
