@@ -1,11 +1,12 @@
 from flask import Flask
 
+from constant import DATABASE_PATH
 from service.i_database_service import IDataBaseService
 from service.lens_service import LensService
 from service.sqlite_database_service import SqliteDataBaseService
 
 app = Flask(__name__)
-database: IDataBaseService = SqliteDataBaseService('database.db')
+database: IDataBaseService = SqliteDataBaseService(DATABASE_PATH)
 lens_service = LensService(database)
 
 
