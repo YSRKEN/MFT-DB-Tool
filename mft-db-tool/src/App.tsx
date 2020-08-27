@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Table, Form, Button } from 'react-bootstrap';
 import 'App.css';
 
-type QueryType = 'MinWideFocalLength' | 'MaxTelephotoFocalLength';
+type QueryType = 'MaxWideFocalLength' | 'MinTelephotoFocalLength';
 
 interface Lens {
   id: number
@@ -34,10 +34,10 @@ interface Query {
 const QueryButton: React.FC<{query: Query, deleteQuery: () => void}> = ({query, deleteQuery}) => {
   let text = '';
   switch (query.type) {
-    case 'MinWideFocalLength':
+    case 'MaxWideFocalLength':
       text = `広角端の換算焦点距離が${query.value}mm 以下`;
       break;
-    case 'MaxTelephotoFocalLength':
+    case 'MinTelephotoFocalLength':
       text = `望遠端の換算焦点距離が${query.value}mm 以上`;
       break;
   }
@@ -47,7 +47,7 @@ const QueryButton: React.FC<{query: Query, deleteQuery: () => void}> = ({query, 
 const App: React.FC = () => {
   const [lensList, setLensList] = useState<Lens[]>([]);
   const [lensList2, setLensList2] = useState<Lens[]>([]);
-  const [queryType, setQueryType] = useState<QueryType>('MinWideFocalLength');
+  const [queryType, setQueryType] = useState<QueryType>('MaxWideFocalLength');
   const [queryValue, setQueryValue] = useState<string>('');
   const [queryList, setQueryList] = useState<Query[]>([]);
 
@@ -69,10 +69,10 @@ const App: React.FC = () => {
     let temp = [...lensList];
     for (const query of queryList) {
       switch (query.type) {
-        case 'MinWideFocalLength':
+        case 'MaxWideFocalLength':
           temp = temp.filter(r => r.wide_focal_length <= query.value);
           break;
-        case 'MaxTelephotoFocalLength':
+        case 'MinTelephotoFocalLength':
           temp = temp.filter(r => r.telephoto_focal_length >= query.value);
           break;
       }
@@ -114,8 +114,8 @@ const App: React.FC = () => {
             <Col xs="auto">
               <Form.Control as="select" value={queryType}
                 onChange={e => setQueryType(e.currentTarget.value as QueryType)}>
-                <option value="MinWideFocalLength">広角端の換算焦点距離が</option>
-                <option value="MaxTelephotoFocalLength">望遠端の換算焦点距離が</option>
+                <option value="MaxWideFocalLength">広角端の換算焦点距離が</option>
+                <option value="MinTelephotoFocalLength">望遠端の換算焦点距離が</option>
               </Form.Control>
             </Col>
             <Col xs={2}>
@@ -124,8 +124,8 @@ const App: React.FC = () => {
             </Col>
             <Col xs="auto">
               <Form.Control as="select" value={queryType} readOnly>
-                <option value="MinWideFocalLength">mm 以下</option>
-                <option value="MaxTelephotoFocalLength">mm 以上</option>
+                <option value="MaxWideFocalLength">mm 以下</option>
+                <option value="MinTelephotoFocalLength">mm 以上</option>
               </Form.Control>
             </Col>
             <Col xs="auto">
