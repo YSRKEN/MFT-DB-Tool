@@ -1,18 +1,15 @@
+import json
 import re
-import uuid
 from decimal import Decimal
-from pprint import pprint
 from typing import List, Dict
 
-import pandas
 from pandas import DataFrame
+from requests_html import HTMLSession, Element
 
 from constant import DATABASE_PATH
 from service.i_database_service import IDataBaseService
 from service.lens_service import LensService, Lens
 from service.sqlite_database_service import SqliteDataBaseService
-
-from requests_html import HTMLSession, Element
 
 
 def get_p_lens_list() -> List[Lens]:
@@ -116,8 +113,8 @@ def main():
     p_lens_list = get_p_lens_list()
     for lens in p_lens_list:
         lens_service.save(lens)
-    for lens in lens_service.find_all():
-        pprint(lens.to_dict())
+    with open('lens_data.json', 'w') as f:
+        f.write(Lens.schema().dumps(lens_service.find_all(), many=True))
 
 
 if __name__ == '__main__':
