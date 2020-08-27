@@ -4,7 +4,8 @@ import { Decimal } from 'decimal.js';
 import 'App.css';
 
 type QueryType = 'MaxWideFocalLength' | 'MinTelephotoFocalLength' | 'MaxWideFNumber' | 'MaxTelephotoFNumber'
-  | 'MaxWideMinFocusDistance' | 'MaxTelephotoMinFocusDistance';
+  | 'MaxWideMinFocusDistance' | 'MaxTelephotoMinFocusDistance' | 'MinMaxPhotographingMagnification'
+  | 'FilterDiameter';
 
 interface Lens {
   id: number
@@ -54,6 +55,12 @@ const QueryButton: React.FC<{ query: Query, deleteQuery: () => void }> = ({ quer
     case 'MaxTelephotoMinFocusDistance':
       text = `望遠端の最短撮影距離が${query.value / 1000}m 以下`;
       break;
+    case 'MinMaxPhotographingMagnification':
+      text = `換算最大撮影倍率が${query.value}倍 以上`;
+      break;
+    case 'FilterDiameter':
+      text = `フィルター径が${query.value}mm`;
+      break;
   }
   return <Button variant="info" className="mr-3 mt-3" onClick={deleteQuery}>{text}</Button>
 };
@@ -100,6 +107,12 @@ const App: React.FC = () => {
           break;
         case 'MaxTelephotoMinFocusDistance':
           temp = temp.filter(r => r.telephoto_min_focus_distance <= query.value);
+          break;
+        case 'MinMaxPhotographingMagnification':
+          temp = temp.filter(r => r.max_photographing_magnification >= query.value);
+          break;
+        case 'FilterDiameter':
+          temp = temp.filter(r => r.filter_diameter === query.value);
           break;
       }
     }
@@ -150,6 +163,8 @@ const App: React.FC = () => {
                 <option value="MaxTelephotoFNumber">望遠端のF値がF</option>
                 <option value="MaxWideMinFocusDistance">広角端の最短撮影距離が</option>
                 <option value="MaxTelephotoMinFocusDistance">望遠端の最短撮影距離が</option>
+                <option value="MinMaxPhotographingMagnification">換算最大撮影倍率が</option>
+                <option value="FilterDiameter">フィルター径が</option>
               </Form.Control>
             </Col>
             <Col xs={2}>
@@ -164,6 +179,8 @@ const App: React.FC = () => {
                 <option value="MaxTelephotoFNumber">以下</option>
                 <option value="MaxWideMinFocusDistance">m 以下</option>
                 <option value="MaxTelephotoMinFocusDistance">m 以下</option>
+                <option value="MinMaxPhotographingMagnification">倍 以上</option>
+                <option value="FilterDiameter">mm</option>
               </Form.Control>
             </Col>
             <Col xs="auto">
