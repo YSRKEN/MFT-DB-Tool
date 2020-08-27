@@ -69,7 +69,8 @@ def get_p_lens_list() -> List[Lens]:
         else:
             fd = -1
 
-        m = re.match(r'.*φ(\d+\.?\d*)mm.*(\d+\.?\d*)mm', record['最大径×全長'].replace('\n', ''))
+        m = re.match(r'.*φ(\d+\.?\d*)mm[^\d]*(\d+\.?\d*)mm', record['最大径×全長'].replace('\n', ''))
+        print(m.groups())
         od = float(m.groups()[0])
         ol = float(m.groups()[1])
 
