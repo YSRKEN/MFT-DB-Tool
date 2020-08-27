@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Container, Row, Col, Table } from 'react-bootstrap';
 import 'App.css';
 
 interface Lens {
@@ -34,23 +35,31 @@ const App: React.FC = () => {
     }
   });
 
-  return (<>
-    <h1>レンズデータベース</h1>
-    <table cellSpacing={0} cellPadding={5}>
-      <thead>
-        <th>メーカー</th>
-        <th>レンズ名</th>
-        <th>価格(税抜)</th>
-      </thead>
-      <tbody>
-        {lensList.map(lens => <tr>
-          <td>{lens.maker}</td>
-          <td>{lens.name}</td>
-          <td>{lens.price}</td>
-        </tr>)}
-      </tbody>
-    </table>
-  </>);
+  return (<Container>
+    <Row className="my-3">
+      <Col>
+        <h1 className="text-center">レンズデータベース</h1>
+      </Col>
+    </Row>
+    <Row className="my-3">
+      <Col>
+        <Table size="sm">
+          <thead>
+            <th>メーカー</th>
+            <th>レンズ名</th>
+            <th>価格(税抜)</th>
+          </thead>
+          <tbody>
+            {lensList.map(lens => <tr>
+              <td>{lens.maker}</td>
+              <td>{lens.name}</td>
+              <td>{lens.price}</td>
+            </tr>)}
+          </tbody>
+        </Table>
+      </Col>
+    </Row>
+  </Container>);
 }
 
 export default App;
