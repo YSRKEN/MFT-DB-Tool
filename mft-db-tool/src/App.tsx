@@ -62,6 +62,42 @@ interface Query {
   value: number;
 }
 
+const calcFilteredLensList = (lensList: Lens[], queryList: Query[]) => {
+  if (queryList.length === 0) {
+    return lensList;
+  }
+  let temp = [...lensList];
+  for (const query of queryList) {
+    switch (query.type) {
+      case 'MaxWideFocalLength':
+        temp = temp.filter(r => r.wide_focal_length <= query.value);
+        break;
+      case 'MinTelephotoFocalLength':
+        temp = temp.filter(r => r.telephoto_focal_length >= query.value);
+        break;
+      case 'MaxWideFNumber':
+        temp = temp.filter(r => r.wide_f_number <= query.value);
+        break;
+      case 'MaxTelephotoFNumber':
+        temp = temp.filter(r => r.telephoto_f_number <= query.value);
+        break;
+      case 'MaxWideMinFocusDistance':
+        temp = temp.filter(r => r.wide_min_focus_distance <= query.value);
+        break;
+      case 'MaxTelephotoMinFocusDistance':
+        temp = temp.filter(r => r.telephoto_min_focus_distance <= query.value);
+        break;
+      case 'MinMaxPhotographingMagnification':
+        temp = temp.filter(r => r.max_photographing_magnification >= query.value);
+        break;
+      case 'FilterDiameter':
+        temp = temp.filter(r => r.filter_diameter === query.value);
+        break;
+    }
+  }
+  return temp;
+};
+
 const QueryButton: React.FC<{ query: Query, deleteQuery: () => void }> = ({ query, deleteQuery }) => {
   const value = ['MaxWideMinFocusDistance', 'MaxTelephotoMinFocusDistance'].includes(query.type) ? query.value / 1000 : query.value;
   const text = `${QueryTypeToTextA[query.type as string]}${value}${QueryTypeToTextB[query.type as string]}`;
@@ -86,40 +122,7 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (queryList.length === 0) {
-      setLensList2([...lensList]);
-      return;
-    }
-    let temp = [...lensList];
-    for (const query of queryList) {
-      switch (query.type) {
-        case 'MaxWideFocalLength':
-          temp = temp.filter(r => r.wide_focal_length <= query.value);
-          break;
-        case 'MinTelephotoFocalLength':
-          temp = temp.filter(r => r.telephoto_focal_length >= query.value);
-          break;
-        case 'MaxWideFNumber':
-          temp = temp.filter(r => r.wide_f_number <= query.value);
-          break;
-        case 'MaxTelephotoFNumber':
-          temp = temp.filter(r => r.telephoto_f_number <= query.value);
-          break;
-        case 'MaxWideMinFocusDistance':
-          temp = temp.filter(r => r.wide_min_focus_distance <= query.value);
-          break;
-        case 'MaxTelephotoMinFocusDistance':
-          temp = temp.filter(r => r.telephoto_min_focus_distance <= query.value);
-          break;
-        case 'MinMaxPhotographingMagnification':
-          temp = temp.filter(r => r.max_photographing_magnification >= query.value);
-          break;
-        case 'FilterDiameter':
-          temp = temp.filter(r => r.filter_diameter === query.value);
-          break;
-      }
-    }
-    setLensList2(temp);
+    setLensList2(calcFilteredLensList(lensList, queryList));
   }, [lensList, queryList]);
 
   const addQuery = () => {
