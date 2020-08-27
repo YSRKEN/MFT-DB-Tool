@@ -7,6 +7,34 @@ type QueryType = 'MaxWideFocalLength' | 'MinTelephotoFocalLength' | 'MaxWideFNum
   | 'MaxWideMinFocusDistance' | 'MaxTelephotoMinFocusDistance' | 'MinMaxPhotographingMagnification'
   | 'FilterDiameter';
 
+const QueryTypeList: QueryType[] = [
+  'MaxWideFocalLength', 'MinTelephotoFocalLength', 'MaxWideFNumber', 'MaxTelephotoFNumber',
+  'MaxWideMinFocusDistance', 'MaxTelephotoMinFocusDistance', 'MinMaxPhotographingMagnification',
+  'FilterDiameter'
+];
+
+const QueryTypeToTextA: {[key: string]: string} = {
+  "MaxWideFocalLength": '広角端の換算焦点距離が',
+  "MinTelephotoFocalLength": '望遠端の換算焦点距離が',
+  "MaxWideFNumber": '広角端のF値がF',
+  "MaxTelephotoFNumber": '望遠端のF値がF',
+  "MaxWideMinFocusDistance": '広角端の最短撮影距離が',
+  "MaxTelephotoMinFocusDistance": '望遠端の最短撮影距離が',
+  "MinMaxPhotographingMagnification": '換算最大撮影倍率が',
+  "FilterDiameter": 'フィルター径が',
+};
+
+const QueryTypeToTextB: {[key: string]: string} = {
+  "MaxWideFocalLength": 'mm 以下',
+  "MinTelephotoFocalLength": 'mm 以上',
+  "MaxWideFNumber": ' 以下',
+  "MaxTelephotoFNumber": ' 以下',
+  "MaxWideMinFocusDistance": 'm 以下',
+  "MaxTelephotoMinFocusDistance": 'm 以下',
+  "MinMaxPhotographingMagnification": '倍 以上',
+  "FilterDiameter": 'mm',
+};
+
 interface Lens {
   id: number
   maker: string
@@ -35,33 +63,8 @@ interface Query {
 }
 
 const QueryButton: React.FC<{ query: Query, deleteQuery: () => void }> = ({ query, deleteQuery }) => {
-  let text = '';
-  switch (query.type) {
-    case 'MaxWideFocalLength':
-      text = `広角端の換算焦点距離が${query.value}mm 以下`;
-      break;
-    case 'MinTelephotoFocalLength':
-      text = `望遠端の換算焦点距離が${query.value}mm 以上`;
-      break;
-    case 'MaxWideFNumber':
-      text = `広角端のF値がF${query.value} 以下`;
-      break;
-    case 'MaxTelephotoFNumber':
-      text = `望遠端のF値がF${query.value} 以下`;
-      break;
-    case 'MaxWideMinFocusDistance':
-      text = `広角端の最短撮影距離が${query.value / 1000}m 以下`;
-      break;
-    case 'MaxTelephotoMinFocusDistance':
-      text = `望遠端の最短撮影距離が${query.value / 1000}m 以下`;
-      break;
-    case 'MinMaxPhotographingMagnification':
-      text = `換算最大撮影倍率が${query.value}倍 以上`;
-      break;
-    case 'FilterDiameter':
-      text = `フィルター径が${query.value}mm`;
-      break;
-  }
+  const value = ['MaxWideMinFocusDistance', 'MaxTelephotoMinFocusDistance'].includes(query.type) ? query.value / 1000 : query.value;
+  const text = `${QueryTypeToTextA[query.type as string]}${value}${QueryTypeToTextB[query.type as string]}`;
   return <Button variant="info" className="mr-3 mt-3" onClick={deleteQuery}>{text}</Button>
 };
 
@@ -157,14 +160,7 @@ const App: React.FC = () => {
             <Col xs="auto">
               <Form.Control as="select" value={queryType}
                 onChange={e => setQueryType(e.currentTarget.value as QueryType)}>
-                <option value="MaxWideFocalLength">広角端の換算焦点距離が</option>
-                <option value="MinTelephotoFocalLength">望遠端の換算焦点距離が</option>
-                <option value="MaxWideFNumber">広角端のF値がF</option>
-                <option value="MaxTelephotoFNumber">望遠端のF値がF</option>
-                <option value="MaxWideMinFocusDistance">広角端の最短撮影距離が</option>
-                <option value="MaxTelephotoMinFocusDistance">望遠端の最短撮影距離が</option>
-                <option value="MinMaxPhotographingMagnification">換算最大撮影倍率が</option>
-                <option value="FilterDiameter">フィルター径が</option>
+                {QueryTypeList.map(q => <option key={q as string} value={q as string}>{QueryTypeToTextA[q as string]}</option>)}
               </Form.Control>
             </Col>
             <Col xs={2}>
@@ -173,14 +169,7 @@ const App: React.FC = () => {
             </Col>
             <Col xs="auto">
               <Form.Control as="select" value={queryType} readOnly>
-                <option value="MaxWideFocalLength">mm 以下</option>
-                <option value="MinTelephotoFocalLength">mm 以上</option>
-                <option value="MaxWideFNumber">以下</option>
-                <option value="MaxTelephotoFNumber">以下</option>
-                <option value="MaxWideMinFocusDistance">m 以下</option>
-                <option value="MaxTelephotoMinFocusDistance">m 以下</option>
-                <option value="MinMaxPhotographingMagnification">倍 以上</option>
-                <option value="FilterDiameter">mm</option>
+                {QueryTypeList.map(q => <option key={q as string} value={q as string}>{QueryTypeToTextB[q as string]}</option>)}
               </Form.Control>
             </Col>
             <Col xs="auto">
