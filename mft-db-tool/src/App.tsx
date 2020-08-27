@@ -3,25 +3,25 @@ import { Container, Row, Col, Table } from 'react-bootstrap';
 import 'App.css';
 
 interface Lens {
-  filter_diameter: number
-  has_image_stabilization: boolean
   id: number
-  is_drip_proof: boolean
-  is_inner_zoom: boolean
   maker: string
-  max_photographing_magnification: number
   name: string
+  product_number: string
+  wide_focal_length: number
+  telephoto_focal_length: number
+  wide_f_number: number
+  telephoto_f_number: number
+  wide_min_focus_distance: number
+  telephoto_min_focus_distance: number
+  max_photographing_magnification: number
+  filter_diameter: number
+  is_drip_proof: boolean
+  has_image_stabilization: boolean
+  is_inner_zoom: boolean
   overall_diameter: number
   overall_length: number
-  price: number
-  product_number: string
-  telephoto_f_number: number
-  telephoto_focal_length: number
-  telephoto_min_focus_distance: number
   weight: number
-  wide_f_number: number
-  wide_focal_length: number
-  wide_min_focus_distance: number
+  price: number
 }
 
 const App: React.FC = () => {
