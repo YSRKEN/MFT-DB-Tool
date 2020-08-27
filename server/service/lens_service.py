@@ -10,6 +10,7 @@ from service.i_database_service import IDataBaseService
 @dataclass
 class Lens:
     id: int = 0
+    maker: str = ''
     name: str = ''
     product_number: str = ''
     wide_focal_length: int = 0
@@ -35,6 +36,7 @@ class LensService:
         self.database.query(
             'CREATE TABLE IF NOT EXISTS lens ('       # レンズ定義
             'id INTEGER PRIMARY KEY,'                 # ID
+            'maker TEXT,'                             # メーカー名
             'name TEXT,'                              # レンズ名
             'product_number TEXT,'                    # 型番
             'wide_focal_length INTEGER,'              # 広角端の換算焦点距離(mm)
@@ -58,9 +60,11 @@ class LensService:
         return result[0]['COUNT(*)']
 
     def find_all(self) -> List[Lens]:
-        result = self.database.select('SELECT id, name, product_number, wide_focal_length, telephoto_focal_length,'
-                                      'wide_f_number, telephoto_f_number, wide_min_focus_distance,'
-                                      'telephoto_min_focus_distance, max_photographing_magnification, filter_diameter, '
+        result = self.database.select('SELECT id, maker, name, product_number,'
+                                      'wide_focal_length, telephoto_focal_length,'
+                                      'wide_f_number, telephoto_f_number,'
+                                      'wide_min_focus_distance,telephoto_min_focus_distance,'
+                                      'max_photographing_magnification, filter_diameter, '
                                       'is_drip_proof, has_image_stabilization, is_inner_zoom, overall_diameter, '
                                       'overall_length, weight, price FROM lens ORDER BY id')
         return [Lens.from_dict(x) for x in result]

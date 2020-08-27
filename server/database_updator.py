@@ -67,8 +67,24 @@ def get_p_lens_list() -> List[Lens]:
         m = re.match(r'.*：(\d+\.?\d*).*', record['最大撮影倍率'].replace('\n', ''))
         mpm = float(m.groups()[0].strip())
 
+        if 'mm' in record['フィルターサイズ']:
+            fd = int(record['フィルターサイズ'].replace('mm', '').replace('φ', ''))
+        else:
+            fd = -1
+
+        m = re.match(r'.*φ(\d+\.?\d*)mm.*(\d+\.?\d*)mm', record['最大径×全長'].replace('\n', ''))
+        od = float(m.groups()[0])
+        ol = float(m.groups()[1])
+
+        is_inner_zoom = False
+        if wfl == tfl:
+            is_inner_zoom = True
+        elif record['品番'] in ['H-F007014', 'H-E08018', 'H-PS45175']:
+            is_inner_zoom = True
+
         lens_data = Lens(
             id=0,
+            maker='Panasonic',
             name=record['レンズ名'],
             product_number=record['品番'],
             wide_focal_length=wfl,
@@ -77,7 +93,15 @@ def get_p_lens_list() -> List[Lens]:
             telephoto_f_number=tfn,
             wide_min_focus_distance=wmfd,
             telephoto_min_focus_distance=tmfd,
-            max_photographing_magnification=mpm
+            max_photographing_magnification=mpm,
+            filter_diameter=fd,
+            is_drip_proof=(record['防塵・防滴'].find('○') >= 0),
+            has_image_stabilization=(record['手ブレ補正'].find('O.I.S.') >= 0),
+            is_inner_zoom=is_inner_zoom,
+            overall_diameter=od,
+            overall_length=ol,
+            weight=int(record['質量'].replace('約', '').replace('g', '').replace(',', '')),
+            price=int(record['メーカー希望小売価格'].replace('円（税抜）', '').replace(',', '')),
         )
         output.append(lens_data)
     return output
@@ -92,7 +116,8 @@ def main():
     p_lens_list = get_p_lens_list()
     for lens in p_lens_list:
         lens_service.save(lens)
-    pprint(lens_service.find_all())
+    for lens in lens_service.find_all():
+        pprint(lens.to_dict())
 
 
 if __name__ == '__main__':
