@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Table, Form, Button } from 'react-bootstrap';
 import 'App.css';
 
-type QueryType = 'MaxWideFocalLength' | 'MinTelephotoFocalLength';
+type QueryType = 'MaxWideFocalLength' | 'MinTelephotoFocalLength' | 'MaxWideFNumber' | 'MaxTelephotoFNumber';
 
 interface Lens {
   id: number
@@ -31,7 +31,7 @@ interface Query {
   value: number;
 }
 
-const QueryButton: React.FC<{query: Query, deleteQuery: () => void}> = ({query, deleteQuery}) => {
+const QueryButton: React.FC<{ query: Query, deleteQuery: () => void }> = ({ query, deleteQuery }) => {
   let text = '';
   switch (query.type) {
     case 'MaxWideFocalLength':
@@ -39,6 +39,12 @@ const QueryButton: React.FC<{query: Query, deleteQuery: () => void}> = ({query, 
       break;
     case 'MinTelephotoFocalLength':
       text = `望遠端の換算焦点距離が${query.value}mm 以上`;
+      break;
+    case 'MaxWideFNumber':
+      text = `広角端のF値がF${query.value} 以下`;
+      break;
+    case 'MaxTelephotoFNumber':
+      text = `望遠端のF値がF${query.value} 以下`;
       break;
   }
   return <Button variant="info" className="mr-3 mt-3" onClick={deleteQuery}>{text}</Button>
@@ -75,6 +81,12 @@ const App: React.FC = () => {
         case 'MinTelephotoFocalLength':
           temp = temp.filter(r => r.telephoto_focal_length >= query.value);
           break;
+        case 'MaxWideFNumber':
+          temp = temp.filter(r => r.wide_f_number <= query.value);
+          break;
+        case 'MaxTelephotoFNumber':
+          temp = temp.filter(r => r.telephoto_f_number <= query.value);
+          break;
       }
     }
     setLensList2(temp);
@@ -90,7 +102,7 @@ const App: React.FC = () => {
       if (isNaN(value)) {
         window.alert('エラー：その条件では追加できません。');
       } else {
-        setQueryList([...queryList, {type: queryType, value}]);
+        setQueryList([...queryList, { type: queryType, value }]);
       }
     } catch {
       window.alert('エラー：その条件では追加できません。');
@@ -116,16 +128,20 @@ const App: React.FC = () => {
                 onChange={e => setQueryType(e.currentTarget.value as QueryType)}>
                 <option value="MaxWideFocalLength">広角端の換算焦点距離が</option>
                 <option value="MinTelephotoFocalLength">望遠端の換算焦点距離が</option>
+                <option value="MaxWideFNumber">広角端のF値がF</option>
+                <option value="MaxTelephotoFNumber">望遠端のF値がF</option>
               </Form.Control>
             </Col>
             <Col xs={2}>
               <Form.Control value={queryValue} placeholder="数値を入力"
-                onChange={e => setQueryValue(e.currentTarget.value)}/>
+                onChange={e => setQueryValue(e.currentTarget.value)} />
             </Col>
             <Col xs="auto">
               <Form.Control as="select" value={queryType} readOnly>
                 <option value="MaxWideFocalLength">mm 以下</option>
                 <option value="MinTelephotoFocalLength">mm 以上</option>
+                <option value="MaxWideFNumber">以下</option>
+                <option value="MaxTelephotoFNumber">以下</option>
               </Form.Control>
             </Col>
             <Col xs="auto">
@@ -137,7 +153,7 @@ const App: React.FC = () => {
     </Row>
     <Row className="my-3">
       <Col>
-        {queryList.map(query => <QueryButton key={query.type} query={query} deleteQuery={() => deleteQuery(query.type)}/>)}
+        {queryList.map(query => <QueryButton key={query.type} query={query} deleteQuery={() => deleteQuery(query.type)} />)}
       </Col>
     </Row>
     <Row className="my-3">
