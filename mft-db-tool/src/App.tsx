@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Table, Form, Button } from 'react-bootstrap';
+import { Decimal } from 'decimal.js';
 import 'App.css';
 
-type QueryType = 'MaxWideFocalLength' | 'MinTelephotoFocalLength' | 'MaxWideFNumber' | 'MaxTelephotoFNumber';
+type QueryType = 'MaxWideFocalLength' | 'MinTelephotoFocalLength' | 'MaxWideFNumber' | 'MaxTelephotoFNumber'
+  | 'MaxWideMinFocusDistance' | 'MaxTelephotoMinFocusDistance';
 
 interface Lens {
   id: number
@@ -46,6 +48,12 @@ const QueryButton: React.FC<{ query: Query, deleteQuery: () => void }> = ({ quer
     case 'MaxTelephotoFNumber':
       text = `望遠端のF値がF${query.value} 以下`;
       break;
+    case 'MaxWideMinFocusDistance':
+      text = `広角端の最短撮影距離が${query.value / 1000}m 以下`;
+      break;
+    case 'MaxTelephotoMinFocusDistance':
+      text = `望遠端の最短撮影距離が${query.value / 1000}m 以下`;
+      break;
   }
   return <Button variant="info" className="mr-3 mt-3" onClick={deleteQuery}>{text}</Button>
 };
@@ -87,6 +95,12 @@ const App: React.FC = () => {
         case 'MaxTelephotoFNumber':
           temp = temp.filter(r => r.telephoto_f_number <= query.value);
           break;
+        case 'MaxWideMinFocusDistance':
+          temp = temp.filter(r => r.wide_min_focus_distance <= query.value);
+          break;
+        case 'MaxTelephotoMinFocusDistance':
+          temp = temp.filter(r => r.telephoto_min_focus_distance <= query.value);
+          break;
       }
     }
     setLensList2(temp);
@@ -97,6 +111,14 @@ const App: React.FC = () => {
       const value = parseFloat(queryValue);
       if (isNaN(value)) {
         window.alert('エラー：その条件では追加できません。');
+        return;
+      }
+      if (queryType === 'MaxWideMinFocusDistance' || queryType === 'MaxTelephotoMinFocusDistance') {
+        const temp = new Decimal(queryValue);
+        const temp2 = temp.mul(new Decimal(1000));
+        const value2 = temp2.toNumber();
+        console.log(value2);
+        setQueryList([...queryList.filter(q => q.type !== queryType), { type: queryType, value: value2 }]);
       } else {
         setQueryList([...queryList.filter(q => q.type !== queryType), { type: queryType, value }]);
       }
@@ -126,6 +148,8 @@ const App: React.FC = () => {
                 <option value="MinTelephotoFocalLength">望遠端の換算焦点距離が</option>
                 <option value="MaxWideFNumber">広角端のF値がF</option>
                 <option value="MaxTelephotoFNumber">望遠端のF値がF</option>
+                <option value="MaxWideMinFocusDistance">広角端の最短撮影距離が</option>
+                <option value="MaxTelephotoMinFocusDistance">望遠端の最短撮影距離が</option>
               </Form.Control>
             </Col>
             <Col xs={2}>
@@ -138,6 +162,8 @@ const App: React.FC = () => {
                 <option value="MinTelephotoFocalLength">mm 以上</option>
                 <option value="MaxWideFNumber">以下</option>
                 <option value="MaxTelephotoFNumber">以下</option>
+                <option value="MaxWideMinFocusDistance">m 以下</option>
+                <option value="MaxTelephotoMinFocusDistance">m 以下</option>
               </Form.Control>
             </Col>
             <Col xs="auto">
@@ -156,12 +182,14 @@ const App: React.FC = () => {
       <Col>
         <Table size="sm" striped>
           <thead>
-            <th>メーカー</th>
-            <th>レンズ名</th>
-            <th>価格(税抜)</th>
+            <tr>
+              <th>メーカー</th>
+              <th>レンズ名</th>
+              <th>価格(税抜)</th>
+            </tr>
           </thead>
           <tbody>
-            {lensList2.map(lens => <tr>
+            {lensList2.map(lens => <tr key={lens.id}>
               <td>{lens.maker}</td>
               <td>{lens.name}</td>
               <td>{lens.price}</td>
