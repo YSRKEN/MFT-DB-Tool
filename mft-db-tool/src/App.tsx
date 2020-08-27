@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Table, Form, Button } from 'react-bootstrap';
 import 'App.css';
 
@@ -31,7 +31,7 @@ interface Query {
   value: number;
 }
 
-const QueryButton: React.FC<{query: Query}> = ({query}) => {
+const QueryButton: React.FC<{query: Query, deleteQuery: () => void}> = ({query, deleteQuery}) => {
   let text = '';
   switch (query.type) {
     case 'MinWideFocalLength':
@@ -41,24 +41,65 @@ const QueryButton: React.FC<{query: Query}> = ({query}) => {
       text = `望遠端の換算焦点距離が${query.value}mm 以上`;
       break;
   }
-  return <Button variant="info" className="mr-3 mt-3">{text}</Button>
+  return <Button variant="info" className="mr-3 mt-3" onClick={deleteQuery}>{text}</Button>
 };
 
 const App: React.FC = () => {
   const [lensList, setLensList] = useState<Lens[]>([]);
+  const [lensList2, setLensList2] = useState<Lens[]>([]);
   const [queryType, setQueryType] = useState<QueryType>('MinWideFocalLength');
-  const [queryList] = useState<Query[]>([
-    {type: 'MinWideFocalLength', value: 28},
-    {type: 'MaxTelephotoFocalLength', value: 70},
-  ]);
+  const [queryValue, setQueryValue] = useState<string>('');
+  const [queryList, setQueryList] = useState<Query[]>([]);
 
-  fetch('./lens_data.json').then(res => {
-    if (res.ok) {
-      res.json().then(data => {
-        setLensList(data);
-      });
+  useEffect(() => {
+    fetch('./lens_data.json').then(res => {
+      if (res.ok) {
+        res.json().then(data => {
+          setLensList(data);
+        });
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    if (queryList.length === 0) {
+      setLensList2([...lensList]);
+      return;
     }
-  });
+    let temp = [...lensList];
+    for (const query of queryList) {
+      switch (query.type) {
+        case 'MinWideFocalLength':
+          temp = temp.filter(r => r.wide_focal_length <= query.value);
+          break;
+        case 'MaxTelephotoFocalLength':
+          temp = temp.filter(r => r.telephoto_focal_length >= query.value);
+          break;
+      }
+    }
+    setLensList2(temp);
+  }, [lensList, queryList]);
+
+  const addQuery = () => {
+    if (queryList.filter(q => q.type === queryType).length > 0) {
+      window.alert('エラー：既存の条件と種類がダブるものは設定できません。');
+      return;
+    }
+    try {
+      const value = parseFloat(queryValue);
+      if (isNaN(value)) {
+        window.alert('エラー：その条件では追加できません。');
+      } else {
+        setQueryList([...queryList, {type: queryType, value}]);
+      }
+    } catch {
+      window.alert('エラー：その条件では追加できません。');
+    };
+  };
+
+  const deleteQuery = (queryType: QueryType) => {
+    setQueryList(queryList.filter(q => q.type !== queryType));
+  };
 
   return (<Container>
     <Row className="my-3">
@@ -77,8 +118,9 @@ const App: React.FC = () => {
                 <option value="MaxTelephotoFocalLength">望遠端の換算焦点距離が</option>
               </Form.Control>
             </Col>
-            <Col xs={1}>
-              <Form.Control />
+            <Col xs={2}>
+              <Form.Control value={queryValue} placeholder="数値を入力"
+                onChange={e => setQueryValue(e.currentTarget.value)}/>
             </Col>
             <Col xs="auto">
               <Form.Control as="select" value={queryType} readOnly>
@@ -87,7 +129,7 @@ const App: React.FC = () => {
               </Form.Control>
             </Col>
             <Col xs="auto">
-              <Button>条件を追加</Button>
+              <Button onClick={addQuery}>条件を追加</Button>
             </Col>
           </Form.Row>
         </Form>
@@ -95,7 +137,7 @@ const App: React.FC = () => {
     </Row>
     <Row className="my-3">
       <Col>
-        {queryList.map(query => <QueryButton key={query.type} query={query} />)}
+        {queryList.map(query => <QueryButton key={query.type} query={query} deleteQuery={() => deleteQuery(query.type)}/>)}
       </Col>
     </Row>
     <Row className="my-3">
@@ -107,7 +149,7 @@ const App: React.FC = () => {
             <th>価格(税抜)</th>
           </thead>
           <tbody>
-            {lensList.map(lens => <tr>
+            {lensList2.map(lens => <tr>
               <td>{lens.maker}</td>
               <td>{lens.name}</td>
               <td>{lens.price}</td>
