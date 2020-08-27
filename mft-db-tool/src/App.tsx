@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Table } from 'react-bootstrap';
+import { Container, Row, Col, Table, Form, Button } from 'react-bootstrap';
 import 'App.css';
+
+type QueryType = 'MinWideFocalLength' | 'MaxTelephotoFocalLength';
 
 interface Lens {
   id: number
@@ -24,8 +26,31 @@ interface Lens {
   price: number
 }
 
+interface Query {
+  type: QueryType;
+  value: number;
+}
+
+const QueryButton: React.FC<{query: Query}> = ({query}) => {
+  let text = '';
+  switch (query.type) {
+    case 'MinWideFocalLength':
+      text = `広角端の換算焦点距離が${query.value}mm 以下`;
+      break;
+    case 'MaxTelephotoFocalLength':
+      text = `望遠端の換算焦点距離が${query.value}mm 以上`;
+      break;
+  }
+  return <Button variant="info" className="mr-3 mt-3">{text}</Button>
+};
+
 const App: React.FC = () => {
   const [lensList, setLensList] = useState<Lens[]>([]);
+  const [queryType, setQueryType] = useState<QueryType>('MinWideFocalLength');
+  const [queryList] = useState<Query[]>([
+    {type: 'MinWideFocalLength', value: 28},
+    {type: 'MaxTelephotoFocalLength', value: 70},
+  ]);
 
   fetch('./lens_data.json').then(res => {
     if (res.ok) {
@@ -43,7 +68,39 @@ const App: React.FC = () => {
     </Row>
     <Row className="my-3">
       <Col>
-        <Table size="sm">
+        <Form>
+          <Form.Row>
+            <Col xs="auto">
+              <Form.Control as="select" value={queryType}
+                onChange={e => setQueryType(e.currentTarget.value as QueryType)}>
+                <option value="MinWideFocalLength">広角端の換算焦点距離が</option>
+                <option value="MaxTelephotoFocalLength">望遠端の換算焦点距離が</option>
+              </Form.Control>
+            </Col>
+            <Col xs={1}>
+              <Form.Control />
+            </Col>
+            <Col xs="auto">
+              <Form.Control as="select" value={queryType} readOnly>
+                <option value="MinWideFocalLength">mm 以下</option>
+                <option value="MaxTelephotoFocalLength">mm 以上</option>
+              </Form.Control>
+            </Col>
+            <Col xs="auto">
+              <Button>条件を追加</Button>
+            </Col>
+          </Form.Row>
+        </Form>
+      </Col>
+    </Row>
+    <Row className="my-3">
+      <Col>
+        {queryList.map(query => <QueryButton key={query.type} query={query} />)}
+      </Col>
+    </Row>
+    <Row className="my-3">
+      <Col>
+        <Table size="sm" striped>
           <thead>
             <th>メーカー</th>
             <th>レンズ名</th>
