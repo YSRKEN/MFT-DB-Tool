@@ -93,16 +93,12 @@ const App: React.FC = () => {
   }, [lensList, queryList]);
 
   const addQuery = () => {
-    if (queryList.filter(q => q.type === queryType).length > 0) {
-      window.alert('エラー：既存の条件と種類がダブるものは設定できません。');
-      return;
-    }
     try {
       const value = parseFloat(queryValue);
       if (isNaN(value)) {
         window.alert('エラー：その条件では追加できません。');
       } else {
-        setQueryList([...queryList, { type: queryType, value }]);
+        setQueryList([...queryList.filter(q => q.type !== queryType), { type: queryType, value }]);
       }
     } catch {
       window.alert('エラー：その条件では追加できません。');
