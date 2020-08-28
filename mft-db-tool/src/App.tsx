@@ -5,12 +5,14 @@ import 'App.css';
 
 type QueryType = 'MaxWideFocalLength' | 'MinTelephotoFocalLength' | 'MaxWideFNumber' | 'MaxTelephotoFNumber'
   | 'MaxWideMinFocusDistance' | 'MaxTelephotoMinFocusDistance' | 'MinMaxPhotographingMagnification'
-  | 'FilterDiameter' | 'IsDripProof' | 'HasImageStabilization' | 'IsInnerZoom';
+  | 'FilterDiameter' | 'IsDripProof' | 'HasImageStabilization' | 'IsInnerZoom'
+  | 'MaxOverallDiameter' | 'MaxOverallLength' | 'MaxWeight' | 'MaxPrice';
 
 const QueryTypeList: QueryType[] = [
   'MaxWideFocalLength', 'MinTelephotoFocalLength', 'MaxWideFNumber', 'MaxTelephotoFNumber',
   'MaxWideMinFocusDistance', 'MaxTelephotoMinFocusDistance', 'MinMaxPhotographingMagnification',
   'FilterDiameter', 'IsDripProof', 'HasImageStabilization', 'IsInnerZoom',
+  'MaxOverallDiameter', 'MaxOverallLength', 'MaxWeight', 'MaxPrice'
 ];
 
 const QueryTypeToTextA: { [key: string]: string } = {
@@ -25,6 +27,10 @@ const QueryTypeToTextA: { [key: string]: string } = {
   'IsDripProof': '防塵防滴である',
   'HasImageStabilization': '手ブレ補正機能がある',
   'IsInnerZoom': 'インナーズームである',
+  'MaxOverallDiameter': 'レンズ全体の直径が',
+  'MaxOverallLength': 'レンズの全長が',
+  'MaxWeight': 'レンズの質量が',
+  'MaxPrice': 'レンズの希望小売価格が'
 };
 
 const QueryTypeToTextB: { [key: string]: string } = {
@@ -39,6 +45,10 @@ const QueryTypeToTextB: { [key: string]: string } = {
   'IsDripProof': '',
   'HasImageStabilization': '',
   'IsInnerZoom': '',
+  'MaxOverallDiameter': 'mm 以下',
+  'MaxOverallLength': 'mm 以下',
+  'MaxWeight': 'g 以下',
+  'MaxPrice': '円 以下'
 };
 
 interface Lens {
@@ -68,6 +78,12 @@ interface Query {
   value: number;
 }
 
+/**
+ * フィルターされた後のレンズ一覧を返す
+ * @param lensList レンズ一覧
+ * @param queryList フィルター一覧
+ * @returns フィルターされた後のレンズ一覧
+ */
 const calcFilteredLensList = (lensList: Lens[], queryList: Query[]) => {
   if (queryList.length === 0) {
     return lensList;
@@ -107,6 +123,18 @@ const calcFilteredLensList = (lensList: Lens[], queryList: Query[]) => {
         break;
       case 'IsInnerZoom':
         temp = temp.filter(r => r.is_inner_zoom);
+        break;
+      case 'MaxOverallDiameter':
+        temp = temp.filter(r => r.overall_diameter <= query.value);
+        break;
+      case 'MaxOverallLength':
+        temp = temp.filter(r => r.overall_length <= query.value);
+        break;
+      case 'MaxWeight':
+        temp = temp.filter(r => r.weight <= query.value);
+        break;
+      case 'MaxPrice':
+        temp = temp.filter(r => r.price <= query.value);
         break;
     }
   }
