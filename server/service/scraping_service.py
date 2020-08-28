@@ -1,6 +1,8 @@
 from typing import List, MutableMapping
 
-from requests_html import HTMLSession, BaseParser, Element
+from requests_html import HTMLSession, BaseParser, Element, HTML
+
+from service.i_database_service import IDataBaseService
 
 
 class DomObject:
@@ -31,8 +33,18 @@ class DomObject:
 
 class ScrapingService:
     """スクレイピング用のラッパークラス"""
-    def __init__(self):
+    def __init__(self, database: IDataBaseService):
         self.session = HTMLSession()
+        self.database = database
+        self.database.query('CREATE TABLE IF NOT EXISTS page_cache (url TEXT PRIMARY KEY, text TEXT)')
 
     def get_page(self, url: str) -> DomObject:
-        return DomObject(self.session.get(url).html)
+        cache_data = self.database.select('SELECT text from page_cache WHERE url=?', (url,))
+        if len(cache_data) == 0:
+            temp: HTML = self.session.get(url).html
+            print(f'caching... [{url}]')
+            self.database.query('INSERT INTO page_cache (url, text) VALUES (?, ?)',
+                                (url, temp.raw_html.decode(temp.encoding)))
+            return DomObject(temp)
+        else:
+            return DomObject(HTML(html=cache_data[0]['text']))
