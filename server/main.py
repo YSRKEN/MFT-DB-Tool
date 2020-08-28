@@ -88,7 +88,7 @@ def get_p_lens_list(scraping: ScrapingService) -> List[Lens]:
             telephoto_min_focus_distance=tmfd,
             max_photographing_magnification=mpm,
             filter_diameter=fd,
-            is_drip_proof=(record['防塵・防滴'].find('○') >= 0),
+            is_drip_proof=(record['防塵・防滴'].find('○') >= 0 or record['防塵・防滴'].find('〇') >= 0),
             has_image_stabilization=(record['手ブレ補正'].find('O.I.S.') >= 0),
             is_inner_zoom=is_inner_zoom,
             overall_diameter=od,
