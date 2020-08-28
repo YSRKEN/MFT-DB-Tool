@@ -5,15 +5,15 @@ import 'App.css';
 
 type QueryType = 'MaxWideFocalLength' | 'MinTelephotoFocalLength' | 'MaxWideFNumber' | 'MaxTelephotoFNumber'
   | 'MaxWideMinFocusDistance' | 'MaxTelephotoMinFocusDistance' | 'MinMaxPhotographingMagnification'
-  | 'FilterDiameter';
+  | 'FilterDiameter' | 'IsDripProof' | 'HasImageStabilization' | 'IsInnerZoom';
 
 const QueryTypeList: QueryType[] = [
   'MaxWideFocalLength', 'MinTelephotoFocalLength', 'MaxWideFNumber', 'MaxTelephotoFNumber',
   'MaxWideMinFocusDistance', 'MaxTelephotoMinFocusDistance', 'MinMaxPhotographingMagnification',
-  'FilterDiameter'
+  'FilterDiameter', 'IsDripProof', 'HasImageStabilization', 'IsInnerZoom',
 ];
 
-const QueryTypeToTextA: {[key: string]: string} = {
+const QueryTypeToTextA: { [key: string]: string } = {
   "MaxWideFocalLength": '広角端の換算焦点距離が',
   "MinTelephotoFocalLength": '望遠端の換算焦点距離が',
   "MaxWideFNumber": '広角端のF値がF',
@@ -22,9 +22,12 @@ const QueryTypeToTextA: {[key: string]: string} = {
   "MaxTelephotoMinFocusDistance": '望遠端の最短撮影距離が',
   "MinMaxPhotographingMagnification": '換算最大撮影倍率が',
   "FilterDiameter": 'フィルター径が',
+  'IsDripProof': '防塵防滴である',
+  'HasImageStabilization': '手ブレ補正機能がある',
+  'IsInnerZoom': 'インナーズームである',
 };
 
-const QueryTypeToTextB: {[key: string]: string} = {
+const QueryTypeToTextB: { [key: string]: string } = {
   "MaxWideFocalLength": 'mm 以下',
   "MinTelephotoFocalLength": 'mm 以上',
   "MaxWideFNumber": ' 以下',
@@ -33,6 +36,9 @@ const QueryTypeToTextB: {[key: string]: string} = {
   "MaxTelephotoMinFocusDistance": 'm 以下',
   "MinMaxPhotographingMagnification": '倍 以上',
   "FilterDiameter": 'mm',
+  'IsDripProof': '',
+  'HasImageStabilization': '',
+  'IsInnerZoom': '',
 };
 
 interface Lens {
@@ -93,6 +99,15 @@ const calcFilteredLensList = (lensList: Lens[], queryList: Query[]) => {
       case 'FilterDiameter':
         temp = temp.filter(r => r.filter_diameter === query.value);
         break;
+      case 'IsDripProof':
+        temp = temp.filter(r => r.is_drip_proof);
+        break;
+      case 'HasImageStabilization':
+        temp = temp.filter(r => r.has_image_stabilization);
+        break;
+      case 'IsInnerZoom':
+        temp = temp.filter(r => r.is_inner_zoom);
+        break;
     }
   }
   return temp;
@@ -100,7 +115,9 @@ const calcFilteredLensList = (lensList: Lens[], queryList: Query[]) => {
 
 const QueryButton: React.FC<{ query: Query, deleteQuery: () => void }> = ({ query, deleteQuery }) => {
   const value = ['MaxWideMinFocusDistance', 'MaxTelephotoMinFocusDistance'].includes(query.type) ? query.value / 1000 : query.value;
-  const text = `${QueryTypeToTextA[query.type as string]}${value}${QueryTypeToTextB[query.type as string]}`;
+  const text = ['IsDripProof', 'HasImageStabilization', 'IsInnerZoom'].includes(query.type)
+    ? `${QueryTypeToTextA[query.type as string]}`
+    : `${QueryTypeToTextA[query.type as string]}${value}${QueryTypeToTextB[query.type as string]}`;
   return <Button variant="info" className="mr-3 mt-3" onClick={deleteQuery}>{text}</Button>
 };
 
@@ -127,19 +144,23 @@ const App: React.FC = () => {
 
   const addQuery = () => {
     try {
-      const value = parseFloat(queryValue);
-      if (isNaN(value)) {
-        window.alert('エラー：その条件では追加できません。');
-        return;
-      }
-      if (queryType === 'MaxWideMinFocusDistance' || queryType === 'MaxTelephotoMinFocusDistance') {
-        const temp = new Decimal(queryValue);
-        const temp2 = temp.mul(new Decimal(1000));
-        const value2 = temp2.toNumber();
-        console.log(value2);
-        setQueryList([...queryList.filter(q => q.type !== queryType), { type: queryType, value: value2 }]);
+      if (['IsDripProof', 'HasImageStabilization', 'IsInnerZoom'].includes(queryType)) {
+        setQueryList([...queryList.filter(q => q.type !== queryType), { type: queryType, value: 0 }]);
       } else {
-        setQueryList([...queryList.filter(q => q.type !== queryType), { type: queryType, value }]);
+        const value = parseFloat(queryValue);
+        if (isNaN(value)) {
+          window.alert('エラー：その条件では追加できません。');
+          return;
+        }
+        if (queryType === 'MaxWideMinFocusDistance' || queryType === 'MaxTelephotoMinFocusDistance') {
+          const temp = new Decimal(queryValue);
+          const temp2 = temp.mul(new Decimal(1000));
+          const value2 = temp2.toNumber();
+          console.log(value2);
+          setQueryList([...queryList.filter(q => q.type !== queryType), { type: queryType, value: value2 }]);
+        } else {
+          setQueryList([...queryList.filter(q => q.type !== queryType), { type: queryType, value }]);
+        }
       }
     } catch {
       window.alert('エラー：その条件では追加できません。');
@@ -166,15 +187,19 @@ const App: React.FC = () => {
                 {QueryTypeList.map(q => <option key={q as string} value={q as string}>{QueryTypeToTextA[q as string]}</option>)}
               </Form.Control>
             </Col>
-            <Col xs={2}>
-              <Form.Control value={queryValue} placeholder="数値を入力"
-                onChange={e => setQueryValue(e.currentTarget.value)} />
-            </Col>
-            <Col xs="auto">
-              <Form.Control as="select" value={queryType} readOnly>
-                {QueryTypeList.map(q => <option key={q as string} value={q as string}>{QueryTypeToTextB[q as string]}</option>)}
-              </Form.Control>
-            </Col>
+            {['IsDripProof', 'HasImageStabilization', 'IsInnerZoom'].includes(queryType)
+              ? <></>
+              : <>
+                <Col xs={2}>
+                  <Form.Control value={queryValue} placeholder="数値を入力"
+                    onChange={e => setQueryValue(e.currentTarget.value)} />
+                </Col>
+                <Col xs="auto">
+                  <Form.Control as="select" value={queryType} readOnly>
+                    {QueryTypeList.map(q => <option key={q as string} value={q as string}>{QueryTypeToTextB[q as string]}</option>)}
+                  </Form.Control>
+                </Col>
+              </>}
             <Col xs="auto">
               <Button onClick={addQuery}>条件を追加</Button>
             </Col>
