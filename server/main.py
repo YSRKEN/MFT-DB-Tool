@@ -234,14 +234,14 @@ def get_o_lens_list(scraping: ScrapingService) -> List[Lens]:
         index_url = f'https://www.olympus-imaging.jp/product/dslr/mlens/{lens_product_number}/index.html'
         print('  ' + index_url)
         page = scraping.get_page(index_url)
-        temp_dict: Dict[str, str] = {}
+        temp_dict2: Dict[str, str] = {}
         for th_element, td_element in zip(page.find_all('th'), page.find_all('td')):
             if th_element is None or td_element is None:
                 continue
-            temp_dict[th_element.text] = td_element.text
+            temp_dict2[th_element.text] = td_element.text
         price = 0
-        if '希望小売価格' in temp_dict:
-            m = re.search(r'([0-9,]+)円', temp_dict['希望小売価格'])
+        if '希望小売価格' in temp_dict2:
+            m = re.search(r'([0-9,]+)円', temp_dict2['希望小売価格'])
             if m is not None:
                 price = int(m.groups()[0].replace(',', ''))
         if price == 0:
