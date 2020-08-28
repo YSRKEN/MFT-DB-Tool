@@ -1,4 +1,4 @@
-from typing import List, MutableMapping
+from typing import List, MutableMapping, Optional
 
 from requests_html import HTMLSession, BaseParser, Element, HTML
 
@@ -10,8 +10,11 @@ class DomObject:
     def __init__(self, base_parser: BaseParser):
         self.base_parser = base_parser
 
-    def find(self, query: str) -> 'DomObject':
-        return DomObject(self.base_parser.find(query, first=True))
+    def find(self, query: str) -> Optional['DomObject']:
+        temp = self.base_parser.find(query, first=True)
+        if temp is None:
+            return None
+        return DomObject(temp)
 
     def find_all(self, query: str) -> List['DomObject']:
         return [DomObject(x) for x in self.base_parser.find(query)]
