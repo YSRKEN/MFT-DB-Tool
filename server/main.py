@@ -11,11 +11,103 @@ from service.scraping_service import ScrapingService
 from service.sqlite_database_service import SqliteDataBaseService
 
 
+def dict_to_lens_for_p(record: Dict[str, str]) -> Lens:
+    """辞書型をレンズデータに変換する
+
+    Parameters
+    ----------
+    record: Dict[str, str]
+        辞書型
+
+    Returns
+    -------
+        レンズデータ
+    """
+
+    # 35mm判換算焦点距離
+    if '～' in record['35mm判換算焦点距離']:
+        wfl = int(record['35mm判換算焦点距離'].split('～')[0].replace('mm', ''))
+        tfl = int(record['35mm判換算焦点距離'].split('～')[1].replace('mm', ''))
+    else:
+        wfl = int(record['35mm判換算焦点距離'].replace('mm', ''))
+        tfl = int(record['35mm判換算焦点距離'].replace('mm', ''))
+
+    wfn = 0.0
+    tfn = 0.0
+    m = re.match(r'.*F(\d+\.?\d*)-(\d+\.?\d*).*', record['レンズ名'])
+    if m is not None:
+        wfn = float(m.groups()[0])
+        tfn = float(m.groups()[1])
+    else:
+        m = re.match(r'.*F(\d+\.?\d*).*', record['レンズ名'])
+        if m is not None:
+            wfn = float(m.groups()[0])
+            tfn = float(m.groups()[0])
+
+    if '/' in record['最短撮影距離']:
+        wmfd = int(Decimal(record['最短撮影距離'].split(' / ')[0].replace('m', '')).scaleb(3))
+        tmfd = int(Decimal(record['最短撮影距離'].split(' / ')[1].replace('m', '')).scaleb(3))
+    else:
+        wmfd = int(Decimal(record['最短撮影距離'].replace('m', '')).scaleb(3))
+        tmfd = int(Decimal(record['最短撮影距離'].replace('m', '')).scaleb(3))
+
+    m = re.match(r'.*：(\d+\.?\d*).*', record['最大撮影倍率'].replace('\n', ''))
+    mpm = float(m.groups()[0].strip())
+
+    if 'mm' in record['フィルターサイズ']:
+        fd = int(record['フィルターサイズ'].replace('mm', '').replace('φ', ''))
+    else:
+        fd = -1
+
+    m = re.match(r'.*φ(\d+\.?\d*)mm[^\d]*(\d+\.?\d*)mm', record['最大径×全長'].replace('\n', ''))
+    od = float(m.groups()[0])
+    ol = float(m.groups()[1])
+
+    is_inner_zoom = False
+    if wfl == tfl:
+        is_inner_zoom = True
+    elif record['品番'] in ['H-F007014', 'H-E08018', 'H-PS45175']:
+        is_inner_zoom = True
+
+    return Lens(
+        id=0,
+        maker='Panasonic',
+        name=record['レンズ名'],
+        product_number=record['品番'],
+        wide_focal_length=wfl,
+        telephoto_focal_length=tfl,
+        wide_f_number=wfn,
+        telephoto_f_number=tfn,
+        wide_min_focus_distance=wmfd,
+        telephoto_min_focus_distance=tmfd,
+        max_photographing_magnification=mpm,
+        filter_diameter=fd,
+        is_drip_proof=(record['防塵・防滴'].find('○') >= 0 or record['防塵・防滴'].find('〇') >= 0),
+        has_image_stabilization=(record['手ブレ補正'].find('O.I.S.') >= 0),
+        is_inner_zoom=is_inner_zoom,
+        overall_diameter=od,
+        overall_length=ol,
+        weight=int(record['質量'].replace('約', '').replace('g', '').replace(',', '')),
+        price=int(record['メーカー希望小売価格'].replace('円（税抜）', '').replace(',', '')),
+    )
+
+
 def get_p_lens_list(scraping: ScrapingService) -> List[Lens]:
+    """Panasonic製レンズの情報を取得する
+
+    Parameters
+    ----------
+    scraping: ScrapingService
+        データスクレイピング用クラス
+
+    Returns
+    -------
+        スクレイピング後のレンズデータ一覧
+    """
     # 情報ページを開く
     page = scraping.get_page('https://panasonic.jp/dc/comparison.html')
 
-    # データを収集する
+    # tableタグからデータを収集する
     df = DataFrame()
     for table_element in page.find_all('table'):
         if 'LUMIX G' not in table_element.full_text:
@@ -27,80 +119,23 @@ def get_p_lens_list(scraping: ScrapingService) -> List[Lens]:
             df[key] = value
         break
 
-    output: List[Lens] = []
-    for record in df.to_dict(orient='records'):
-        record: Dict[str, str] = record
-
-        if '～' in record['35mm判換算焦点距離']:
-            wfl = int(record['35mm判換算焦点距離'].split('～')[0].replace('mm', ''))
-            tfl = int(record['35mm判換算焦点距離'].split('～')[1].replace('mm', ''))
-        else:
-            wfl = int(record['35mm判換算焦点距離'].replace('mm', ''))
-            tfl = int(record['35mm判換算焦点距離'].replace('mm', ''))
-
-        wfn = 0.0
-        tfn = 0.0
-        m = re.match(r'.*F(\d+\.?\d*)-(\d+\.?\d*).*', record['レンズ名'])
-        if m is not None:
-            wfn = float(m.groups()[0])
-            tfn = float(m.groups()[1])
-        else:
-            m = re.match(r'.*F(\d+\.?\d*).*', record['レンズ名'])
-            if m is not None:
-                wfn = float(m.groups()[0])
-                tfn = float(m.groups()[0])
-
-        if '/' in record['最短撮影距離']:
-            wmfd = int(Decimal(record['最短撮影距離'].split(' / ')[0].replace('m', '')).scaleb(3))
-            tmfd = int(Decimal(record['最短撮影距離'].split(' / ')[1].replace('m', '')).scaleb(3))
-        else:
-            wmfd = int(Decimal(record['最短撮影距離'].replace('m', '')).scaleb(3))
-            tmfd = int(Decimal(record['最短撮影距離'].replace('m', '')).scaleb(3))
-
-        m = re.match(r'.*：(\d+\.?\d*).*', record['最大撮影倍率'].replace('\n', ''))
-        mpm = float(m.groups()[0].strip())
-
-        if 'mm' in record['フィルターサイズ']:
-            fd = int(record['フィルターサイズ'].replace('mm', '').replace('φ', ''))
-        else:
-            fd = -1
-
-        m = re.match(r'.*φ(\d+\.?\d*)mm[^\d]*(\d+\.?\d*)mm', record['最大径×全長'].replace('\n', ''))
-        od = float(m.groups()[0])
-        ol = float(m.groups()[1])
-
-        is_inner_zoom = False
-        if wfl == tfl:
-            is_inner_zoom = True
-        elif record['品番'] in ['H-F007014', 'H-E08018', 'H-PS45175']:
-            is_inner_zoom = True
-
-        lens_data = Lens(
-            id=0,
-            maker='Panasonic',
-            name=record['レンズ名'],
-            product_number=record['品番'],
-            wide_focal_length=wfl,
-            telephoto_focal_length=tfl,
-            wide_f_number=wfn,
-            telephoto_f_number=tfn,
-            wide_min_focus_distance=wmfd,
-            telephoto_min_focus_distance=tmfd,
-            max_photographing_magnification=mpm,
-            filter_diameter=fd,
-            is_drip_proof=(record['防塵・防滴'].find('○') >= 0 or record['防塵・防滴'].find('〇') >= 0),
-            has_image_stabilization=(record['手ブレ補正'].find('O.I.S.') >= 0),
-            is_inner_zoom=is_inner_zoom,
-            overall_diameter=od,
-            overall_length=ol,
-            weight=int(record['質量'].replace('約', '').replace('g', '').replace(',', '')),
-            price=int(record['メーカー希望小売価格'].replace('円（税抜）', '').replace(',', '')),
-        )
-        output.append(lens_data)
-    return output
+    # tableタグの各行を、Lens型のデータに変換する
+    return [dict_to_lens_for_p(x) for x in df.to_dict(orient='records')]
 
 
 def get_o_lens_list(scraping: ScrapingService) -> List[Lens]:
+    """OLYMPUS製レンズの情報を取得する
+
+    Parameters
+    ----------
+    scraping: ScrapingService
+        データスクレイピング用クラス
+
+    Returns
+    -------
+        スクレイピング後のレンズデータ一覧
+    """
+
     # レンズのURL一覧を取得する
     page = scraping.get_page('https://www.olympus-imaging.jp/product/dslr/mlens/index.html')
     lens_list: List[Tuple[str, str]] = []
@@ -276,14 +311,14 @@ def main():
     database: IDataBaseService = SqliteDataBaseService(DATABASE_PATH)
     scraping = ScrapingService(database)
 
-    # オリンパス製レンズについての情報を収集する
-    o_lens_list = get_o_lens_list(scraping)
-    for lens in o_lens_list:
-        print(lens)
-
     # パナソニック製レンズについての情報を収集する
     p_lens_list = get_p_lens_list(scraping)
     for lens in p_lens_list:
+        print(lens)
+
+    # オリンパス製レンズについての情報を収集する
+    o_lens_list = get_o_lens_list(scraping)
+    for lens in o_lens_list:
         print(lens)
 
     # DBを再構築して書き込む
