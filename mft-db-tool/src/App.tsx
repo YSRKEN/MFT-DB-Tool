@@ -5,47 +5,6 @@ import { Lens, QueryTypeList } from 'constant';
 import QueryType from 'model/QueryType';
 import { createQuery } from 'utility';
 
-/*type QueryTypeOld = 'MaxWideFocalLength' | 'MinTelephotoFocalLength' | 'MaxWideFNumber' | 'MaxTelephotoFNumber'
-  | 'MaxWideMinFocusDistance' | 'MaxTelephotoMinFocusDistance' | 'MinMaxPhotographingMagnification'
-  | 'FilterDiameter' | 'IsDripProof' | 'HasImageStabilization' | 'IsInnerZoom'
-  | 'MaxOverallDiameter' | 'MaxOverallLength' | 'MaxWeight' | 'MaxPrice';
-
-const QueryTypeToTextA: { [key: string]: string } = {
-  "MaxWideFocalLength": '広角端の換算焦点距離が',
-  "MinTelephotoFocalLength": '望遠端の換算焦点距離が',
-  "MaxWideFNumber": '広角端のF値がF',
-  "MaxTelephotoFNumber": '望遠端のF値がF',
-  "MaxWideMinFocusDistance": '広角端の最短撮影距離が',
-  "MaxTelephotoMinFocusDistance": '望遠端の最短撮影距離が',
-  "MinMaxPhotographingMagnification": '換算最大撮影倍率が',
-  "FilterDiameter": 'フィルター径が',
-  'IsDripProof': '防塵防滴である',
-  'HasImageStabilization': '手ブレ補正機能がある',
-  'IsInnerZoom': 'インナーズームである',
-  'MaxOverallDiameter': 'レンズ全体の直径が',
-  'MaxOverallLength': 'レンズの全長が',
-  'MaxWeight': 'レンズの質量が',
-  'MaxPrice': 'レンズの希望小売価格が'
-};
-
-const QueryTypeToTextB: { [key: string]: string } = {
-  "MaxWideFocalLength": 'mm 以下',
-  "MinTelephotoFocalLength": 'mm 以上',
-  "MaxWideFNumber": ' 以下',
-  "MaxTelephotoFNumber": ' 以下',
-  "MaxWideMinFocusDistance": 'm 以下',
-  "MaxTelephotoMinFocusDistance": 'm 以下',
-  "MinMaxPhotographingMagnification": '倍 以上',
-  "FilterDiameter": 'mm',
-  'IsDripProof': '',
-  'HasImageStabilization': '',
-  'IsInnerZoom': '',
-  'MaxOverallDiameter': 'mm 以下',
-  'MaxOverallLength': 'mm 以下',
-  'MaxWeight': 'g 以下',
-  'MaxPrice': '円 以下'
-};*/
-
 interface Query {
   type: QueryType;
   value: number;
@@ -64,48 +23,6 @@ const calcFilteredLensList = (lensList: Lens[], queryList: Query[]) => {
   let temp = [...lensList];
   for (const query of queryList) {
     temp = query.type.filter(temp, query.value);
-    /*
-    switch (query.type) {
-      case 'MaxWideFNumber':
-        temp = temp.filter(r => r.wide_f_number <= query.value);
-        break;
-      case 'MaxTelephotoFNumber':
-        temp = temp.filter(r => r.telephoto_f_number <= query.value);
-        break;
-      case 'MaxWideMinFocusDistance':
-        temp = temp.filter(r => r.wide_min_focus_distance <= query.value);
-        break;
-      case 'MaxTelephotoMinFocusDistance':
-        temp = temp.filter(r => r.telephoto_min_focus_distance <= query.value);
-        break;
-      case 'MinMaxPhotographingMagnification':
-        temp = temp.filter(r => r.max_photographing_magnification >= query.value);
-        break;
-      case 'FilterDiameter':
-        temp = temp.filter(r => r.filter_diameter === query.value);
-        break;
-      case 'IsDripProof':
-        temp = temp.filter(r => r.is_drip_proof);
-        break;
-      case 'HasImageStabilization':
-        temp = temp.filter(r => r.has_image_stabilization);
-        break;
-      case 'IsInnerZoom':
-        temp = temp.filter(r => r.is_inner_zoom);
-        break;
-      case 'MaxOverallDiameter':
-        temp = temp.filter(r => r.overall_diameter <= query.value);
-        break;
-      case 'MaxOverallLength':
-        temp = temp.filter(r => r.overall_length <= query.value);
-        break;
-      case 'MaxWeight':
-        temp = temp.filter(r => r.weight <= query.value);
-        break;
-      case 'MaxPrice':
-        temp = temp.filter(r => r.price <= query.value);
-        break;
-    }*/
   }
   return temp;
 };

@@ -1,6 +1,19 @@
 import QueryType from "model/QueryType";
 import MaxWideFocalLength from "model/query/MaxWideFocalLength";
 import MinTelephotoFocalLength from "model/query/MinTelephotoFocalLength";
+import MaxWideFNumber from "model/query/MaxWideFNumber";
+import MaxTelephotoFNumber from "model/query/MaxTelephotoFNumber";
+import MaxWideMinFocusDistance from "model/query/MaxWideMinFocusDistance";
+import MaxTelephotoMinFocusDistance from "model/query/MaxTelephotoMinFocusDistance";
+import MinMaxPhotographingMagnification from "model/query/MinMaxPhotographingMagnification";
+import FilterDiameter from "model/query/FilterDiameter";
+import IsDripProof from "model/query/IsDripProof";
+import HasImageStabilization from "model/query/HasImageStabilization";
+import IsInnerZoom from "model/query/IsInnerZoom";
+import MaxOverallDiameter from "model/query/MaxOverallDiameter";
+import MaxOverallLength from "model/query/MaxOverallLength";
+import MaxWeight from "model/query/MaxWeight";
+import MaxPrice from "model/query/MaxPrice";
 
 export interface Lens {
   // レンズID
@@ -45,5 +58,18 @@ export interface Lens {
 
 export const QueryTypeList: QueryType[] = [
   new MaxWideFocalLength(),
-  new MinTelephotoFocalLength()
+  new MinTelephotoFocalLength(),
+  new MaxWideFNumber(),
+  new MaxTelephotoFNumber(),
+  new MaxWideMinFocusDistance(),
+  new MaxTelephotoMinFocusDistance(),
+  new MinMaxPhotographingMagnification(),
+  new FilterDiameter(),
+  new IsDripProof(),
+  new HasImageStabilization(),
+  new IsInnerZoom(),
+  new MaxOverallDiameter(),
+  new MaxOverallLength(),
+  new MaxWeight(),
+  new MaxPrice(),
 ];
