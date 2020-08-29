@@ -37,7 +37,7 @@ export interface Lens {
   wide_min_focus_distance: number
   // 望遠端の最短撮影距離[mm]
   telephoto_min_focus_distance: number
-  // 最大撮影倍率
+  // 換算最大撮影倍率
   max_photographing_magnification: number
   // フィルター径[mm]
   filter_diameter: number
