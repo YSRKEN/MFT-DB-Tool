@@ -1,5 +1,5 @@
 import QueryType from "model/QueryType";
-import { QueryTypeList } from "constant";
+import { QueryTypeList, Lens, Query } from "constant";
 
 /**
  * クエリタイプ指定文字列によって、どういったクエリを生やすかを決める
@@ -14,4 +14,21 @@ export const createQuery = (queryType: string, value: number): {type: QueryType,
   } else {
     throw Error('誤ったクエリ種類が入力されました.');
   }
+};
+
+/**
+ * フィルターされた後のレンズ一覧を返す
+ * @param lensList レンズ一覧
+ * @param queryList フィルター一覧
+ * @returns フィルターされた後のレンズ一覧
+ */
+export const calcFilteredLensList = (lensList: Lens[], queryList: Query[]) => {
+  if (queryList.length === 0) {
+    return lensList;
+  }
+  let temp = [...lensList];
+  for (const query of queryList) {
+    temp = query.type.filter(temp, query.value);
+  }
+  return temp;
 };

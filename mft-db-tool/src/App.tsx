@@ -2,48 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Table, Form, Button } from 'react-bootstrap';
 import { Decimal } from 'decimal.js';
 import 'App.css';
-import { Lens, QueryTypeList, MilliMeterToMeterQueryTypeList, BooleanQueryTypeList } from 'constant';
-import QueryType from 'model/QueryType';
-import { createQuery } from 'utility';
-
-interface Query {
-  type: QueryType;
-  value: number;
-}
-
-/**
- * フィルターされた後のレンズ一覧を返す
- * @param lensList レンズ一覧
- * @param queryList フィルター一覧
- * @returns フィルターされた後のレンズ一覧
- */
-const calcFilteredLensList = (lensList: Lens[], queryList: Query[]) => {
-  if (queryList.length === 0) {
-    return lensList;
-  }
-  let temp = [...lensList];
-  for (const query of queryList) {
-    temp = query.type.filter(temp, query.value);
-  }
-  return temp;
-};
-
-const QueryButton: React.FC<{ query: Query, deleteQuery: () => void }> = ({ query, deleteQuery }) => {
-  // Boolean型な判定条件の場合、数値を表示する必要がない
-  if (BooleanQueryTypeList.includes(query.type.name)) {
-    return <Button variant="info" className="mr-3 mt-3" onClick={deleteQuery}>{query.type.prefixMessage}</Button>;
-  }
-
-  // 単位変換を伴う場合
-  if (MilliMeterToMeterQueryTypeList.includes(query.type.name)) {
-    const text = `${query.type.prefixMessage}${query.value / 1000}${query.type.suffixMessage}`;
-    return <Button variant="info" className="mr-3 mt-3" onClick={deleteQuery}>{text}</Button>;
-  }
-
-  // 単位変換を伴わない場合
-  const text = `${query.type.prefixMessage}${query.value}${query.type.suffixMessage}`;
-  return <Button variant="info" className="mr-3 mt-3" onClick={deleteQuery}>{text}</Button>;
-};
+import { Lens, QueryTypeList, MilliMeterToMeterQueryTypeList, BooleanQueryTypeList, Query } from 'constant';
+import { createQuery, calcFilteredLensList } from 'utility';
+import QueryButton from 'component/QueryButton';
 
 const App: React.FC = () => {
   const [lensList, setLensList] = useState<Lens[]>([]);

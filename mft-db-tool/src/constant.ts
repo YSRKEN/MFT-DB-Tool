@@ -81,3 +81,9 @@ export const MilliMeterToMeterQueryTypeList: string[] = ['MaxWideMinFocusDistanc
 
 /** boolean処理なクエリタイプの一覧 */
 export const BooleanQueryTypeList: string[] = ['IsDripProof', 'HasImageStabilization', 'IsInnerZoom'];
+
+/** クエリ */
+export interface Query {
+  type: QueryType;
+  value: number;
+}
