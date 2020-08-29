@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Table, Form, Button } from 'react-bootstrap';
+import { Container, Row, Col } from 'react-bootstrap';
 import { Decimal } from 'decimal.js';
 import 'App.css';
-import { Lens, QueryTypeList, MilliMeterToMeterQueryTypeList, BooleanQueryTypeList, Query } from 'constant';
+import { Lens, MilliMeterToMeterQueryTypeList, BooleanQueryTypeList, Query } from 'constant';
 import { createQuery, calcFilteredLensList, parseFloat2 } from 'utility';
 import QueryButton from 'component/QueryButton';
+import LensTable from 'component/LensTable';
+import AddQueryForm from 'component/AddQueryForm';
 
 /** メインとなるComponent */
 const App: React.FC = () => {
@@ -76,61 +78,21 @@ const App: React.FC = () => {
     </Row>
     <Row className="my-3">
       <Col>
-        <Form>
-          <Form.Row>
-            <Col xs="auto">
-              <Form.Control as="select" value={queryType}
-                onChange={e => setQueryType(e.currentTarget.value)}>
-                {QueryTypeList.map(q => 
-                  <option key={q.name} value={q.name}>{q.prefixMessage}</option>
-                )}
-              </Form.Control>
-            </Col>
-            {BooleanQueryTypeList.includes(queryType)
-              ? <></>
-              : <>
-                <Col xs={2}>
-                  <Form.Control value={queryValue} placeholder="数値を入力"
-                    onChange={e => setQueryValue(e.currentTarget.value)} />
-                </Col>
-                <Col xs="auto">
-                  <Form.Control as="select" value={queryType} readOnly>
-                    {QueryTypeList.map(q =>
-                      <option key={q.name} value={q.name}>{q.suffixMessage}</option>
-                    )}
-                  </Form.Control>
-                </Col>
-              </>}
-            <Col xs="auto">
-              <Button onClick={addQuery}>条件を追加</Button>
-            </Col>
-          </Form.Row>
-        </Form>
+        <AddQueryForm queryType={queryType} setQueryType={setQueryType}
+          queryValue={queryValue} setQueryValue={setQueryValue}
+          addQuery={addQuery}/>
       </Col>
     </Row>
     <Row className="my-3">
       <Col>
-        {queryList.map(query => <QueryButton key={query.type.name} query={query} deleteQuery={() => deleteQuery(query.type.name)} />)}
+        {queryList.map(query =>
+          <QueryButton key={query.type.name} query={query} deleteQuery={() => deleteQuery(query.type.name)} />
+        )}
       </Col>
     </Row>
     <Row className="my-3">
       <Col>
-        <Table size="sm" striped>
-          <thead>
-            <tr>
-              <th>メーカー</th>
-              <th>レンズ名</th>
-              <th>価格(税抜)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {lensList2.map(lens => <tr key={lens.id}>
-              <td>{lens.maker}</td>
-              <td>{lens.name}</td>
-              <td>{lens.price}</td>
-            </tr>)}
-          </tbody>
-        </Table>
+      <LensTable lensList={lensList2} />
       </Col>
     </Row>
   </Container>);
