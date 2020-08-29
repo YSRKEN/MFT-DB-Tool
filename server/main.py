@@ -11,9 +11,13 @@ def main():
 
     # パナソニック製レンズについての情報を収集する
     p_lens_list = get_p_lens_list(scraping)
+    for lens in p_lens_list:
+        print(lens)
 
     # オリンパス製レンズについての情報を収集する
     o_lens_list = get_o_lens_list(scraping)
+    for lens in o_lens_list:
+        print(lens)
 
     # DBを再構築して書き込む
     lens_service = LensService(database)

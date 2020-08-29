@@ -124,7 +124,7 @@ def dict_to_lens_for_p(record: Dict[str, str]) -> Lens:
 
     # インナーズーム
     is_inner_zoom = False
-    if wide_focal_length == wide_focal_length:
+    if wide_focal_length == telephoto_focal_length:
         is_inner_zoom = True
     elif record['品番'] in ['H-F007014', 'H-E08018', 'H-PS45175']:
         is_inner_zoom = True
@@ -283,7 +283,7 @@ def dict_to_lens_for_o(record: Dict[str, str], record2: Dict[str, str]) -> Lens:
 
     # インナーズーム
     is_inner_zoom = False
-    if wide_focal_length == wide_focal_length:
+    if wide_focal_length == telephoto_focal_length:
         is_inner_zoom = True
     elif record['品番'] in ['7-14_28pro', '40-150_28pro']:
         is_inner_zoom = True
