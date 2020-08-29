@@ -1,20 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Table, Form, Button } from 'react-bootstrap';
-import { Decimal } from 'decimal.js';
 import 'App.css';
-import { Lens } from 'constant';
+import { Lens, QueryTypeList } from 'constant';
+import QueryType from 'model/QueryType';
+import { createQuery } from 'utility';
 
-type QueryType = 'MaxWideFocalLength' | 'MinTelephotoFocalLength' | 'MaxWideFNumber' | 'MaxTelephotoFNumber'
+/*type QueryTypeOld = 'MaxWideFocalLength' | 'MinTelephotoFocalLength' | 'MaxWideFNumber' | 'MaxTelephotoFNumber'
   | 'MaxWideMinFocusDistance' | 'MaxTelephotoMinFocusDistance' | 'MinMaxPhotographingMagnification'
   | 'FilterDiameter' | 'IsDripProof' | 'HasImageStabilization' | 'IsInnerZoom'
   | 'MaxOverallDiameter' | 'MaxOverallLength' | 'MaxWeight' | 'MaxPrice';
-
-const QueryTypeList: QueryType[] = [
-  'MaxWideFocalLength', 'MinTelephotoFocalLength', 'MaxWideFNumber', 'MaxTelephotoFNumber',
-  'MaxWideMinFocusDistance', 'MaxTelephotoMinFocusDistance', 'MinMaxPhotographingMagnification',
-  'FilterDiameter', 'IsDripProof', 'HasImageStabilization', 'IsInnerZoom',
-  'MaxOverallDiameter', 'MaxOverallLength', 'MaxWeight', 'MaxPrice'
-];
 
 const QueryTypeToTextA: { [key: string]: string } = {
   "MaxWideFocalLength": '広角端の換算焦点距離が',
@@ -50,7 +44,7 @@ const QueryTypeToTextB: { [key: string]: string } = {
   'MaxOverallLength': 'mm 以下',
   'MaxWeight': 'g 以下',
   'MaxPrice': '円 以下'
-};
+};*/
 
 interface Query {
   type: QueryType;
@@ -69,13 +63,9 @@ const calcFilteredLensList = (lensList: Lens[], queryList: Query[]) => {
   }
   let temp = [...lensList];
   for (const query of queryList) {
+    temp = query.type.filter(temp, query.value);
+    /*
     switch (query.type) {
-      case 'MaxWideFocalLength':
-        temp = temp.filter(r => r.wide_focal_length <= query.value);
-        break;
-      case 'MinTelephotoFocalLength':
-        temp = temp.filter(r => r.telephoto_focal_length >= query.value);
-        break;
       case 'MaxWideFNumber':
         temp = temp.filter(r => r.wide_f_number <= query.value);
         break;
@@ -115,23 +105,26 @@ const calcFilteredLensList = (lensList: Lens[], queryList: Query[]) => {
       case 'MaxPrice':
         temp = temp.filter(r => r.price <= query.value);
         break;
-    }
+    }*/
   }
   return temp;
 };
 
 const QueryButton: React.FC<{ query: Query, deleteQuery: () => void }> = ({ query, deleteQuery }) => {
+  /*
   const value = ['MaxWideMinFocusDistance', 'MaxTelephotoMinFocusDistance'].includes(query.type) ? query.value / 1000 : query.value;
   const text = ['IsDripProof', 'HasImageStabilization', 'IsInnerZoom'].includes(query.type)
     ? `${QueryTypeToTextA[query.type as string]}`
     : `${QueryTypeToTextA[query.type as string]}${value}${QueryTypeToTextB[query.type as string]}`;
-  return <Button variant="info" className="mr-3 mt-3" onClick={deleteQuery}>{text}</Button>
+  return <Button variant="info" className="mr-3 mt-3" onClick={deleteQuery}>{text}</Button>*/
+  const text = `${query.type.prefixMessage}${query.value}${query.type.suffixMessage}`;
+  return <Button variant="info" className="mr-3 mt-3" onClick={deleteQuery}>{text}</Button>;
 };
 
 const App: React.FC = () => {
   const [lensList, setLensList] = useState<Lens[]>([]);
   const [lensList2, setLensList2] = useState<Lens[]>([]);
-  const [queryType, setQueryType] = useState<QueryType>('MaxWideFocalLength');
+  const [queryType, setQueryType] = useState<string>('MaxWideFocalLength');
   const [queryValue, setQueryValue] = useState<string>('');
   const [queryList, setQueryList] = useState<Query[]>([]);
 
@@ -151,6 +144,17 @@ const App: React.FC = () => {
 
   const addQuery = () => {
     try {
+      const value = parseFloat(queryValue);
+      if (isNaN(value)) {
+        window.alert('エラー：その条件では追加できません。');
+        return;
+      }
+      setQueryList([...queryList.filter(q => q.type.name !== queryType), createQuery(queryType, value)]);
+    } catch {
+      window.alert('エラー：その条件では追加できません。');
+    };
+
+/*    try {
       if (['IsDripProof', 'HasImageStabilization', 'IsInnerZoom'].includes(queryType)) {
         setQueryList([...queryList.filter(q => q.type !== queryType), { type: queryType, value: 0 }]);
       } else {
@@ -171,11 +175,11 @@ const App: React.FC = () => {
       }
     } catch {
       window.alert('エラー：その条件では追加できません。');
-    };
+    };*/
   };
 
-  const deleteQuery = (queryType: QueryType) => {
-    setQueryList(queryList.filter(q => q.type !== queryType));
+  const deleteQuery = (queryType: string) => {
+    setQueryList(queryList.filter(q => q.type.name !== queryType));
   };
 
   return (<Container>
@@ -190,8 +194,10 @@ const App: React.FC = () => {
           <Form.Row>
             <Col xs="auto">
               <Form.Control as="select" value={queryType}
-                onChange={e => setQueryType(e.currentTarget.value as QueryType)}>
-                {QueryTypeList.map(q => <option key={q as string} value={q as string}>{QueryTypeToTextA[q as string]}</option>)}
+                onChange={e => setQueryType(e.currentTarget.value)}>
+                {QueryTypeList.map(q => 
+                  <option key={q.name} value={q.name}>{q.prefixMessage}</option>
+                )}
               </Form.Control>
             </Col>
             {['IsDripProof', 'HasImageStabilization', 'IsInnerZoom'].includes(queryType)
@@ -203,7 +209,9 @@ const App: React.FC = () => {
                 </Col>
                 <Col xs="auto">
                   <Form.Control as="select" value={queryType} readOnly>
-                    {QueryTypeList.map(q => <option key={q as string} value={q as string}>{QueryTypeToTextB[q as string]}</option>)}
+                    {QueryTypeList.map(q =>
+                      <option key={q.name} value={q.name}>{q.suffixMessage}</option>
+                    )}
                   </Form.Control>
                 </Col>
               </>}
@@ -216,7 +224,7 @@ const App: React.FC = () => {
     </Row>
     <Row className="my-3">
       <Col>
-        {queryList.map(query => <QueryButton key={query.type} query={query} deleteQuery={() => deleteQuery(query.type)} />)}
+        {queryList.map(query => <QueryButton key={query.type.name} query={query} deleteQuery={() => deleteQuery(query.type.name)} />)}
       </Col>
     </Row>
     <Row className="my-3">
