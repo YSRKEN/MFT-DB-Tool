@@ -14,6 +14,8 @@ import MaxOverallDiameter from "model/query/MaxOverallDiameter";
 import MaxOverallLength from "model/query/MaxOverallLength";
 import MaxWeight from "model/query/MaxWeight";
 import MaxPrice from "model/query/MaxPrice";
+import IsPrime from "model/query/IsPrime";
+import IsZoom from "model/query/IsZoom";
 
 /** レンズ情報 */
 export interface Lens {
@@ -70,6 +72,8 @@ export const QueryTypeList: QueryType[] = [
   new IsDripProof(),
   new HasImageStabilization(),
   new IsInnerZoom(),
+  new IsPrime(),
+  new IsZoom(),
   new MaxOverallDiameter(),
   new MaxOverallLength(),
   new MaxWeight(),
@@ -80,7 +84,7 @@ export const QueryTypeList: QueryType[] = [
 export const MilliMeterToMeterQueryTypeList: string[] = ['MaxWideMinFocusDistance', 'MaxTelephotoMinFocusDistance'];
 
 /** boolean処理なクエリタイプの一覧 */
-export const BooleanQueryTypeList: string[] = ['IsDripProof', 'HasImageStabilization', 'IsInnerZoom'];
+export const BooleanQueryTypeList: string[] = ['IsDripProof', 'HasImageStabilization', 'IsInnerZoom', 'IsPrime', 'IsZoom'];
 
 /** クエリ */
 export interface Query {
