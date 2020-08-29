@@ -2,6 +2,7 @@ import React from "react";
 import { Query, BooleanQueryTypeList, MilliMeterToMeterQueryTypeList } from "constant";
 import { Button } from "react-bootstrap";
 
+/** クエリを表現するためのボタン */
 const QueryButton: React.FC<{ query: Query, deleteQuery: () => void }> = ({ query, deleteQuery }) => {
   // Boolean型な判定条件の場合、数値を表示する必要がない
   if (BooleanQueryTypeList.includes(query.type.name)) {

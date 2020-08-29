@@ -32,3 +32,21 @@ export const calcFilteredLensList = (lensList: Lens[], queryList: Query[]) => {
   }
   return temp;
 };
+
+/**
+ * 文字列を浮動小数点数型に変換する。ただし変換できない場合、NaNになる場合はnullを返す
+ * @param text 文字列
+ * @returns 成功時はnumber型、失敗時はnullが返される
+ */
+export const parseFloat2 = (text: string): number | null => {
+  try {
+    // 入力チェック
+    const value = parseFloat(text);
+    if (isNaN(value)) {
+      return null;
+    }
+    return value;
+  } catch {
+    return null;
+  }
+};
