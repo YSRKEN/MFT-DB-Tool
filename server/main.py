@@ -7,6 +7,7 @@ from service.i_database_service import IDataBaseService
 from service.lens_service import Lens, LensService
 from service.scraping_service import ScrapingService, get_p_lens_list
 from service.sqlite_database_service import SqliteDataBaseService
+from service.ulitity import regex
 
 
 def dict_to_lens_for_o(record: Dict[str, str], record2: Dict[str, str]) -> Lens:
@@ -24,117 +25,94 @@ def dict_to_lens_for_o(record: Dict[str, str], record2: Dict[str, str]) -> Lens:
         レンズデータ
     """
 
-    wide_focal_length = 0
-    telephoto_focal_length = 0
-    m = re.match(r'.*換算 *(\d+) *- *(\d+)mm相当.*', record['焦点距離'])
-    if m is not None:
-        wide_focal_length = int(m.groups()[0])
-        telephoto_focal_length = int(m.groups()[1])
+    # 35mm判換算焦点距離
+    result1 = regex(record['焦点距離'], r'換算 *(\d+) *- *(\d+)mm相当')
+    result2 = regex(record['焦点距離'], r'換算 *(\d+)mm相当')
+    if len(result1) > 0:
+        wide_focal_length = int(result1[0])
+        telephoto_focal_length = int(result1[1])
     else:
-        m = re.match(r'.*換算 *(\d+)mm相当.*', record['焦点距離'])
-        if m is not None:
-            wide_focal_length = int(m.groups()[0])
-            telephoto_focal_length = int(m.groups()[0])
+        wide_focal_length = int(result2[0])
+        telephoto_focal_length = wide_focal_length
 
-    wide_f_number = 0.0
-    telephoto_f_number = 0.0
-    m = re.match(r'.*F(\d+\.?\d*)-(\d+\.?\d*).*', record['レンズ名'])
-    if m is not None:
-        wide_f_number = float(m.groups()[0])
-        telephoto_f_number = float(m.groups()[1])
+    # F値
+    result1 = regex(record['レンズ名'], r'F(\d+\.?\d*)-(\d+\.?\d*)')
+    result2 = regex(record['レンズ名'], r'F(\d+\.?\d*)')
+    if len(result1) > 0:
+        wide_f_number = float(result1[0])
+        telephoto_f_number = float(result1[1])
     else:
-        m = re.match(r'.*F(\d+\.?\d*).*', record['レンズ名'])
-        if m is not None:
-            wide_f_number = float(m.groups()[0])
-            telephoto_f_number = float(m.groups()[0])
+        wide_f_number = float(result2[0])
+        telephoto_f_number = wide_f_number
 
-    wide_min_focus_distance = 0.0
-    telephoto_min_focus_distance = 0.0
-    m = re.match(r'.*(\d+\.\d+) *m.*(\d+\.\d+) *m.*', record['最短撮影距離'])
-    if m is not None:
-        wide_min_focus_distance = int(Decimal(m.groups()[0].replace('m', '')).scaleb(3))
-        telephoto_min_focus_distance = int(Decimal(m.groups()[1].replace('m', '')).scaleb(3))
+    # 最短撮影距離(m単位のものをmm単位に変換していることに注意)
+    result1 = regex(record['最短撮影距離'], r'(\d+\.\d+) *m.*(\d+\.\d+) *m')
+    result2 = regex(record['最短撮影距離'], r'(\d+\.\d+) *m')
+    if len(result1) > 0:
+        wide_min_focus_distance = int(Decimal(result1[0]).scaleb(3))
+        telephoto_min_focus_distance = int(Decimal(result1[1]).scaleb(3))
     else:
-        m = re.match(r'.*(\d+\.\d+) *m.*', record['最短撮影距離'])
-        if m is not None:
-            wide_min_focus_distance = int(Decimal(m.groups()[0].replace('m', '')).scaleb(3))
-            telephoto_min_focus_distance = wide_min_focus_distance
-        else:
-            exit()
+        wide_min_focus_distance = int(Decimal(result2[0]).scaleb(3))
+        telephoto_min_focus_distance = wide_min_focus_distance
 
+    # 換算最大撮影倍率
     max_photographing_magnification = 0.0
-    while True:
-        m = re.match(r'.*換算 *(\d+\.\d+)倍.*', record['最大撮影倍率'])
-        if m is not None:
-            max_photographing_magnification = float(m.groups()[0])
-            break
-        m = re.match(r'.*(\d+\.\d+)倍相当.*', record['最大撮影倍率'])
-        if m is not None:
-            for x in m.groups():
-                max_photographing_magnification = max(max_photographing_magnification, float(x))
-            break
-        if '35mm判換算最大撮影倍率' in record:
-            m = re.match(r'.*(\d+\.\d+)倍相当.*', record['35mm判換算最大撮影倍率'])
-            if m is not None:
-                for x in m.groups():
-                    max_photographing_magnification = max(max_photographing_magnification, float(x))
-                break
-            break
-        if '最大撮影倍率（35mm判換算）' in record:
-            m = re.match(r'.*(\d+\.\d+)倍相当.*', record['最大撮影倍率（35mm判換算）'])
-            if m is not None:
-                for x in m.groups():
-                    max_photographing_magnification = max(max_photographing_magnification, float(x))
-                break
-            break
+    for key, val in record.items():
+        if '最大撮影倍率' not in key:
+            continue
+        result = regex(val, r'(\d+\.\d+)倍相当')
+        for x in result:
+            max_photographing_magnification = max(max_photographing_magnification, float(x))
+        result = regex(val, r'換算 *(\d+\.\d+)倍')
+        for x in result:
+            max_photographing_magnification = max(max_photographing_magnification, float(x))
 
+    # フィルターサイズ
+    filter_diameter = -1
+    for key, val in record.items():
+        if 'フィルターサイズ' not in key:
+            continue
+        result = regex(val, r'(\d+)mm')
+        if len(result) > 0:
+            filter_diameter = int(result[0])
+
+    # 最大径と全長
     overall_diameter = 0.0
     overall_length = 0.0
     for key, val in record.items():
-        if '最大径' in key:
-            if '全長' in key or '長さ' in key:
-                m = re.search(r'(\d*\.?\d*) mm ｘ (\d*\.?\d*) *mm', val)
-                if m is not None:
-                    overall_diameter = float(m.groups()[0])
-                    overall_length = float(m.groups()[1])
-                    continue
-                m = re.search(r'(\d*\.?\d*)mm x (\d*\.?\d*) *mm', val)
-                if m is not None:
-                    overall_diameter = float(m.groups()[0])
-                    overall_length = float(m.groups()[1])
-                    continue
-                m = re.search(r'(\d*\.?\d*)mm × (\d*\.?\d*) *mm', val)
-                if m is not None:
-                    overall_diameter = float(m.groups()[0])
-                    overall_length = float(m.groups()[1])
-                    continue
-                m = re.search(r'(\d*\.?\d*)[^\d]*(\d*\.?\d*) *mm', val)
-                if m is not None:
-                    overall_diameter = float(m.groups()[0])
-                    overall_length = float(m.groups()[1])
-                    continue
-    if overall_diameter == 0.0 or overall_length == 0.0:
-        exit()
+        if '最大径' not in key:
+            continue
+        if '全長' not in key and '長さ' not in key:
+            continue
+        result = regex(val, r'(\d+\.?\d*)')
+        if len(result) >= 2:
+            overall_diameter = float(result[0])
+            overall_length = float(result[1])
+            break
 
-    filter_diameter = -1
-    if 'フィルターサイズ' in record:
-        filter_diameter = int(record['フィルターサイズ'].replace('Ø', '').replace('Φ', '').replace('⌀', '').replace('mm', ''))
+    # 防塵防滴
+    is_drip_proof = False
+    for key, val in record.items():
+        if '防滴' in key:
+            is_drip_proof = True
+            break
 
-    weight = 0
-    temp = record['質量'].replace('ｇ', 'g').replace(' g', 'g')
-    m = re.search(r'(\d+)g', temp)
-    if m is not None:
-        weight = int(m.groups()[0])
-    if weight == 0:
-        exit()
+    # 手ブレ補正
+    has_image_stabilization = 'IS' in record['レンズ名']
 
-    price = 0
-    if '希望小売価格' in record2:
-        m = re.search(r'([0-9,]+)円', record2['希望小売価格'])
-        if m is not None:
-            price = int(m.groups()[0].replace(',', ''))
-    if price == 0:
-        exit()
+    # インナーズーム
+    is_inner_zoom = False
+    if wide_focal_length == wide_focal_length:
+        is_inner_zoom = True
+    elif record['品番'] in ['7-14_28pro', '40-150_28pro']:
+        is_inner_zoom = True
+
+    # 質量
+    result = regex(record['質量'], r'([\d,]+)(g|ｇ| g)')
+    weight = int(result[0].replace(',', ''))
+
+    # メーカー希望小売価格
+    price = int(regex(record2['希望小売価格'], r'([0-9,]+)円')[0].replace(',', ''))
 
     return Lens(
         id=0,
@@ -149,9 +127,9 @@ def dict_to_lens_for_o(record: Dict[str, str], record2: Dict[str, str]) -> Lens:
         telephoto_min_focus_distance=telephoto_min_focus_distance,
         max_photographing_magnification=max_photographing_magnification,
         filter_diameter=filter_diameter,
-        is_drip_proof=('防滴処理' in record),
-        has_image_stabilization=('IS' in record['レンズ名']),
-        is_inner_zoom=False,
+        is_drip_proof=is_drip_proof,
+        has_image_stabilization=has_image_stabilization,
+        is_inner_zoom=is_inner_zoom,
         overall_diameter=overall_diameter,
         overall_length=overall_length,
         weight=weight,
@@ -217,15 +195,11 @@ def main():
 
     # オリンパス製レンズについての情報を収集する
     o_lens_list = get_o_lens_list(scraping)
-    for lens in o_lens_list:
-        print(lens)
 
     exit()
 
     # パナソニック製レンズについての情報を収集する
     p_lens_list = get_p_lens_list(scraping)
-    for lens in p_lens_list:
-        print(lens)
 
     # DBを再構築して書き込む
     lens_service = LensService(database)
