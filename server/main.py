@@ -11,6 +11,14 @@ from service.scraping_service import ScrapingService
 from service.sqlite_database_service import SqliteDataBaseService
 
 
+def regex(text: str, pattern: str) -> List[str]:
+    """グループ入り正規表現にマッチさせて、ヒットした場合はそれぞれの文字列の配列、そうでない場合は空配列を返す"""
+    m = re.search(pattern, text)
+    if m is None:
+        return []
+    return list(m.groups())
+
+
 def dict_to_lens_for_p(record: Dict[str, str]) -> Lens:
     """辞書型をレンズデータに変換する
 
@@ -25,70 +33,92 @@ def dict_to_lens_for_p(record: Dict[str, str]) -> Lens:
     """
 
     # 35mm判換算焦点距離
-    if '～' in record['35mm判換算焦点距離']:
-        wfl = int(record['35mm判換算焦点距離'].split('～')[0].replace('mm', ''))
-        tfl = int(record['35mm判換算焦点距離'].split('～')[1].replace('mm', ''))
+    result1 = regex(record['35mm判換算焦点距離'], r'(\d+)mm～(\d+)mm')
+    result2 = regex(record['35mm判換算焦点距離'], r'(\d+)mm')
+    if len(result1) > 0:
+        wide_focal_length = int(result1[0])
+        telephoto_focal_length = int(result1[1])
     else:
-        wfl = int(record['35mm判換算焦点距離'].replace('mm', ''))
-        tfl = int(record['35mm判換算焦点距離'].replace('mm', ''))
+        wide_focal_length = int(result2[0])
+        telephoto_focal_length = wide_focal_length
 
-    wfn = 0.0
-    tfn = 0.0
-    m = re.match(r'.*F(\d+\.?\d*)-(\d+\.?\d*).*', record['レンズ名'])
-    if m is not None:
-        wfn = float(m.groups()[0])
-        tfn = float(m.groups()[1])
+    # F値
+    result1 = regex(record['レンズ名'], r'F(\d+\.?\d*)-(\d+\.?\d*)')
+    result2 = regex(record['レンズ名'], r'F(\d+\.?\d*)')
+    if len(result1) > 0:
+        wide_f_number = float(result1[0])
+        telephoto_f_number = float(result1[1])
     else:
-        m = re.match(r'.*F(\d+\.?\d*).*', record['レンズ名'])
-        if m is not None:
-            wfn = float(m.groups()[0])
-            tfn = float(m.groups()[0])
+        wide_f_number = float(result2[0])
+        telephoto_f_number = wide_f_number
 
-    if '/' in record['最短撮影距離']:
-        wmfd = int(Decimal(record['最短撮影距離'].split(' / ')[0].replace('m', '')).scaleb(3))
-        tmfd = int(Decimal(record['最短撮影距離'].split(' / ')[1].replace('m', '')).scaleb(3))
+    # 最短撮影距離(m単位のものをmm単位に変換していることに注意)
+    result1 = regex(record['最短撮影距離'], r'(\d+\.?\d*)m / (\d+\.?\d*)m')
+    result2 = regex(record['最短撮影距離'], r'(\d+\.?\d*)m')
+    if len(result1) > 0:
+        wide_min_focus_distance = int(Decimal(result1[0]).scaleb(3))
+        telephoto_min_focus_distance = int(Decimal(result1[1]).scaleb(3))
     else:
-        wmfd = int(Decimal(record['最短撮影距離'].replace('m', '')).scaleb(3))
-        tmfd = int(Decimal(record['最短撮影距離'].replace('m', '')).scaleb(3))
+        wide_min_focus_distance = int(Decimal(result2[0]).scaleb(3))
+        telephoto_min_focus_distance = wide_min_focus_distance
 
-    m = re.match(r'.*：(\d+\.?\d*).*', record['最大撮影倍率'].replace('\n', ''))
-    mpm = float(m.groups()[0].strip())
+    # 換算最大撮影倍率
+    result = regex(record['最大撮影倍率'], r'：(\d+\.?\d*)')
+    max_photographing_magnification = float(result[0])
 
-    if 'mm' in record['フィルターサイズ']:
-        fd = int(record['フィルターサイズ'].replace('mm', '').replace('φ', ''))
+    # フィルターサイズ
+    result = regex(record['フィルターサイズ'], r'φ(\d+)mm')
+    if len(result) > 0:
+        filter_diameter = int(result[0])
     else:
-        fd = -1
+        filter_diameter = -1
 
-    m = re.match(r'.*φ(\d+\.?\d*)mm[^\d]*(\d+\.?\d*)mm', record['最大径×全長'].replace('\n', ''))
-    od = float(m.groups()[0])
-    ol = float(m.groups()[1])
+    # 最大径と全長
+    result = regex(record['最大径×全長'], r'(\d+\.?\d*)mm[^\d]*(\d+\.?\d*)mm')
+    overall_diameter = float(result[0])
+    overall_length = float(result[1])
 
+    # 防塵防滴
+    is_drip_proof = record['防塵・防滴'].find('○') >= 0 or record['防塵・防滴'].find('〇') >= 0
+
+    # 手ブレ補正
+    has_image_stabilization = record['手ブレ補正'].find('O.I.S.') >= 0
+
+    # インナーズーム
     is_inner_zoom = False
-    if wfl == tfl:
+    if wide_focal_length == wide_focal_length:
         is_inner_zoom = True
     elif record['品番'] in ['H-F007014', 'H-E08018', 'H-PS45175']:
         is_inner_zoom = True
+
+    # 質量
+    result = regex(record['質量'], r'([\d,]+)g')
+    weight = int(result[0].replace(',', ''))
+
+    # メーカー希望小売価格
+    result = regex(record['メーカー希望小売価格'], r'([\d,]+) *円')
+    price = int(result[0].replace(',', ''))
 
     return Lens(
         id=0,
         maker='Panasonic',
         name=record['レンズ名'],
         product_number=record['品番'],
-        wide_focal_length=wfl,
-        telephoto_focal_length=tfl,
-        wide_f_number=wfn,
-        telephoto_f_number=tfn,
-        wide_min_focus_distance=wmfd,
-        telephoto_min_focus_distance=tmfd,
-        max_photographing_magnification=mpm,
-        filter_diameter=fd,
-        is_drip_proof=(record['防塵・防滴'].find('○') >= 0 or record['防塵・防滴'].find('〇') >= 0),
-        has_image_stabilization=(record['手ブレ補正'].find('O.I.S.') >= 0),
+        wide_focal_length=wide_focal_length,
+        telephoto_focal_length=telephoto_focal_length,
+        wide_f_number=wide_f_number,
+        telephoto_f_number=telephoto_f_number,
+        wide_min_focus_distance=wide_min_focus_distance,
+        telephoto_min_focus_distance=telephoto_min_focus_distance,
+        max_photographing_magnification=max_photographing_magnification,
+        filter_diameter=filter_diameter,
+        is_drip_proof=is_drip_proof,
+        has_image_stabilization=has_image_stabilization,
         is_inner_zoom=is_inner_zoom,
-        overall_diameter=od,
-        overall_length=ol,
-        weight=int(record['質量'].replace('約', '').replace('g', '').replace(',', '')),
-        price=int(record['メーカー希望小売価格'].replace('円（税抜）', '').replace(',', '')),
+        overall_diameter=overall_diameter,
+        overall_length=overall_length,
+        weight=weight,
+        price=price,
     )
 
 
@@ -315,6 +345,8 @@ def main():
     p_lens_list = get_p_lens_list(scraping)
     for lens in p_lens_list:
         print(lens)
+
+    exit()
 
     # オリンパス製レンズについての情報を収集する
     o_lens_list = get_o_lens_list(scraping)
