@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Table, Form, Button } from 'react-bootstrap';
 import { Decimal } from 'decimal.js';
 import 'App.css';
+import { Lens } from 'constant';
 
 type QueryType = 'MaxWideFocalLength' | 'MinTelephotoFocalLength' | 'MaxWideFNumber' | 'MaxTelephotoFNumber'
   | 'MaxWideMinFocusDistance' | 'MaxTelephotoMinFocusDistance' | 'MinMaxPhotographingMagnification'
@@ -50,28 +51,6 @@ const QueryTypeToTextB: { [key: string]: string } = {
   'MaxWeight': 'g 以下',
   'MaxPrice': '円 以下'
 };
-
-interface Lens {
-  id: number
-  maker: string
-  name: string
-  product_number: string
-  wide_focal_length: number
-  telephoto_focal_length: number
-  wide_f_number: number
-  telephoto_f_number: number
-  wide_min_focus_distance: number
-  telephoto_min_focus_distance: number
-  max_photographing_magnification: number
-  filter_diameter: number
-  is_drip_proof: boolean
-  has_image_stabilization: boolean
-  is_inner_zoom: boolean
-  overall_diameter: number
-  overall_length: number
-  weight: number
-  price: number
-}
 
 interface Query {
   type: QueryType;
