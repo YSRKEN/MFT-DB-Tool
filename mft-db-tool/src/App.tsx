@@ -1,161 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Table, Form, Button } from 'react-bootstrap';
+import { Container, Row, Col } from 'react-bootstrap';
 import { Decimal } from 'decimal.js';
 import 'App.css';
+import { Lens, MilliMeterToMeterQueryTypeList, BooleanQueryTypeList, Query } from 'constant';
+import { createQuery, calcFilteredLensList, parseFloat2 } from 'utility';
+import QueryButton from 'component/QueryButton';
+import LensTable from 'component/LensTable';
+import AddQueryForm from 'component/AddQueryForm';
 
-type QueryType = 'MaxWideFocalLength' | 'MinTelephotoFocalLength' | 'MaxWideFNumber' | 'MaxTelephotoFNumber'
-  | 'MaxWideMinFocusDistance' | 'MaxTelephotoMinFocusDistance' | 'MinMaxPhotographingMagnification'
-  | 'FilterDiameter' | 'IsDripProof' | 'HasImageStabilization' | 'IsInnerZoom'
-  | 'MaxOverallDiameter' | 'MaxOverallLength' | 'MaxWeight' | 'MaxPrice';
-
-const QueryTypeList: QueryType[] = [
-  'MaxWideFocalLength', 'MinTelephotoFocalLength', 'MaxWideFNumber', 'MaxTelephotoFNumber',
-  'MaxWideMinFocusDistance', 'MaxTelephotoMinFocusDistance', 'MinMaxPhotographingMagnification',
-  'FilterDiameter', 'IsDripProof', 'HasImageStabilization', 'IsInnerZoom',
-  'MaxOverallDiameter', 'MaxOverallLength', 'MaxWeight', 'MaxPrice'
-];
-
-const QueryTypeToTextA: { [key: string]: string } = {
-  "MaxWideFocalLength": '広角端の換算焦点距離が',
-  "MinTelephotoFocalLength": '望遠端の換算焦点距離が',
-  "MaxWideFNumber": '広角端のF値がF',
-  "MaxTelephotoFNumber": '望遠端のF値がF',
-  "MaxWideMinFocusDistance": '広角端の最短撮影距離が',
-  "MaxTelephotoMinFocusDistance": '望遠端の最短撮影距離が',
-  "MinMaxPhotographingMagnification": '換算最大撮影倍率が',
-  "FilterDiameter": 'フィルター径が',
-  'IsDripProof': '防塵防滴である',
-  'HasImageStabilization': '手ブレ補正機能がある',
-  'IsInnerZoom': 'インナーズームである',
-  'MaxOverallDiameter': 'レンズ全体の直径が',
-  'MaxOverallLength': 'レンズの全長が',
-  'MaxWeight': 'レンズの質量が',
-  'MaxPrice': 'レンズの希望小売価格が'
-};
-
-const QueryTypeToTextB: { [key: string]: string } = {
-  "MaxWideFocalLength": 'mm 以下',
-  "MinTelephotoFocalLength": 'mm 以上',
-  "MaxWideFNumber": ' 以下',
-  "MaxTelephotoFNumber": ' 以下',
-  "MaxWideMinFocusDistance": 'm 以下',
-  "MaxTelephotoMinFocusDistance": 'm 以下',
-  "MinMaxPhotographingMagnification": '倍 以上',
-  "FilterDiameter": 'mm',
-  'IsDripProof': '',
-  'HasImageStabilization': '',
-  'IsInnerZoom': '',
-  'MaxOverallDiameter': 'mm 以下',
-  'MaxOverallLength': 'mm 以下',
-  'MaxWeight': 'g 以下',
-  'MaxPrice': '円 以下'
-};
-
-interface Lens {
-  id: number
-  maker: string
-  name: string
-  product_number: string
-  wide_focal_length: number
-  telephoto_focal_length: number
-  wide_f_number: number
-  telephoto_f_number: number
-  wide_min_focus_distance: number
-  telephoto_min_focus_distance: number
-  max_photographing_magnification: number
-  filter_diameter: number
-  is_drip_proof: boolean
-  has_image_stabilization: boolean
-  is_inner_zoom: boolean
-  overall_diameter: number
-  overall_length: number
-  weight: number
-  price: number
-}
-
-interface Query {
-  type: QueryType;
-  value: number;
-}
-
-/**
- * フィルターされた後のレンズ一覧を返す
- * @param lensList レンズ一覧
- * @param queryList フィルター一覧
- * @returns フィルターされた後のレンズ一覧
- */
-const calcFilteredLensList = (lensList: Lens[], queryList: Query[]) => {
-  if (queryList.length === 0) {
-    return lensList;
-  }
-  let temp = [...lensList];
-  for (const query of queryList) {
-    switch (query.type) {
-      case 'MaxWideFocalLength':
-        temp = temp.filter(r => r.wide_focal_length <= query.value);
-        break;
-      case 'MinTelephotoFocalLength':
-        temp = temp.filter(r => r.telephoto_focal_length >= query.value);
-        break;
-      case 'MaxWideFNumber':
-        temp = temp.filter(r => r.wide_f_number <= query.value);
-        break;
-      case 'MaxTelephotoFNumber':
-        temp = temp.filter(r => r.telephoto_f_number <= query.value);
-        break;
-      case 'MaxWideMinFocusDistance':
-        temp = temp.filter(r => r.wide_min_focus_distance <= query.value);
-        break;
-      case 'MaxTelephotoMinFocusDistance':
-        temp = temp.filter(r => r.telephoto_min_focus_distance <= query.value);
-        break;
-      case 'MinMaxPhotographingMagnification':
-        temp = temp.filter(r => r.max_photographing_magnification >= query.value);
-        break;
-      case 'FilterDiameter':
-        temp = temp.filter(r => r.filter_diameter === query.value);
-        break;
-      case 'IsDripProof':
-        temp = temp.filter(r => r.is_drip_proof);
-        break;
-      case 'HasImageStabilization':
-        temp = temp.filter(r => r.has_image_stabilization);
-        break;
-      case 'IsInnerZoom':
-        temp = temp.filter(r => r.is_inner_zoom);
-        break;
-      case 'MaxOverallDiameter':
-        temp = temp.filter(r => r.overall_diameter <= query.value);
-        break;
-      case 'MaxOverallLength':
-        temp = temp.filter(r => r.overall_length <= query.value);
-        break;
-      case 'MaxWeight':
-        temp = temp.filter(r => r.weight <= query.value);
-        break;
-      case 'MaxPrice':
-        temp = temp.filter(r => r.price <= query.value);
-        break;
-    }
-  }
-  return temp;
-};
-
-const QueryButton: React.FC<{ query: Query, deleteQuery: () => void }> = ({ query, deleteQuery }) => {
-  const value = ['MaxWideMinFocusDistance', 'MaxTelephotoMinFocusDistance'].includes(query.type) ? query.value / 1000 : query.value;
-  const text = ['IsDripProof', 'HasImageStabilization', 'IsInnerZoom'].includes(query.type)
-    ? `${QueryTypeToTextA[query.type as string]}`
-    : `${QueryTypeToTextA[query.type as string]}${value}${QueryTypeToTextB[query.type as string]}`;
-  return <Button variant="info" className="mr-3 mt-3" onClick={deleteQuery}>{text}</Button>
-};
-
+/** メインとなるComponent */
 const App: React.FC = () => {
+  // フィルタ前のレンズ一覧
   const [lensList, setLensList] = useState<Lens[]>([]);
+  // フィルタ後のレンズ一覧
   const [lensList2, setLensList2] = useState<Lens[]>([]);
-  const [queryType, setQueryType] = useState<QueryType>('MaxWideFocalLength');
+  // 選択されているクエリタイプ
+  const [queryType, setQueryType] = useState<string>('MaxWideFocalLength');
+  // クエリに入力する値
   const [queryValue, setQueryValue] = useState<string>('');
+  // クエリ一覧
   const [queryList, setQueryList] = useState<Query[]>([]);
 
+  /** 起動時の読み込み */
   useEffect(() => {
     fetch('./lens_data.json').then(res => {
       if (res.ok) {
@@ -166,37 +32,42 @@ const App: React.FC = () => {
     });
   }, []);
 
+  // 自動でフィルタしておく
   useEffect(() => {
     setLensList2(calcFilteredLensList(lensList, queryList));
   }, [lensList, queryList]);
 
+  // クエリを追加する
   const addQuery = () => {
-    try {
-      if (['IsDripProof', 'HasImageStabilization', 'IsInnerZoom'].includes(queryType)) {
-        setQueryList([...queryList.filter(q => q.type !== queryType), { type: queryType, value: 0 }]);
-      } else {
-        const value = parseFloat(queryValue);
-        if (isNaN(value)) {
-          window.alert('エラー：その条件では追加できません。');
-          return;
-        }
-        if (queryType === 'MaxWideMinFocusDistance' || queryType === 'MaxTelephotoMinFocusDistance') {
-          const temp = new Decimal(queryValue);
-          const temp2 = temp.mul(new Decimal(1000));
-          const value2 = temp2.toNumber();
-          console.log(value2);
-          setQueryList([...queryList.filter(q => q.type !== queryType), { type: queryType, value: value2 }]);
-        } else {
-          setQueryList([...queryList.filter(q => q.type !== queryType), { type: queryType, value }]);
-        }
-      }
-    } catch {
+    // Boolean型な判定条件の場合
+    if (BooleanQueryTypeList.includes(queryType)) {
+      setQueryList([...queryList.filter(q => q.type.name !== queryType), createQuery(queryType, 0)]);
+      return;
+    }
+
+    // 入力チェック
+    const value = parseFloat2(queryValue);
+    if (value === null) {
       window.alert('エラー：その条件では追加できません。');
-    };
+      return;
+    }
+
+    // 入力
+    if (MilliMeterToMeterQueryTypeList.includes(queryType)) {
+      // 単位変換を伴う場合
+      const temp = new Decimal(queryValue);
+      const temp2 = temp.mul(new Decimal(1000));
+      const value2 = temp2.toNumber();
+      setQueryList([...queryList.filter(q => q.type.name !== queryType), createQuery(queryType, value2)]);
+      return;
+    }
+    // 単位変換を伴わない場合
+    setQueryList([...queryList.filter(q => q.type.name !== queryType), createQuery(queryType, value)]);
   };
 
-  const deleteQuery = (queryType: QueryType) => {
-    setQueryList(queryList.filter(q => q.type !== queryType));
+  // クエリを削除する
+  const deleteQuery = (queryType: string) => {
+    setQueryList(queryList.filter(q => q.type.name !== queryType));
   };
 
   return (<Container>
@@ -207,57 +78,21 @@ const App: React.FC = () => {
     </Row>
     <Row className="my-3">
       <Col>
-        <Form>
-          <Form.Row>
-            <Col xs="auto">
-              <Form.Control as="select" value={queryType}
-                onChange={e => setQueryType(e.currentTarget.value as QueryType)}>
-                {QueryTypeList.map(q => <option key={q as string} value={q as string}>{QueryTypeToTextA[q as string]}</option>)}
-              </Form.Control>
-            </Col>
-            {['IsDripProof', 'HasImageStabilization', 'IsInnerZoom'].includes(queryType)
-              ? <></>
-              : <>
-                <Col xs={2}>
-                  <Form.Control value={queryValue} placeholder="数値を入力"
-                    onChange={e => setQueryValue(e.currentTarget.value)} />
-                </Col>
-                <Col xs="auto">
-                  <Form.Control as="select" value={queryType} readOnly>
-                    {QueryTypeList.map(q => <option key={q as string} value={q as string}>{QueryTypeToTextB[q as string]}</option>)}
-                  </Form.Control>
-                </Col>
-              </>}
-            <Col xs="auto">
-              <Button onClick={addQuery}>条件を追加</Button>
-            </Col>
-          </Form.Row>
-        </Form>
+        <AddQueryForm queryType={queryType} setQueryType={setQueryType}
+          queryValue={queryValue} setQueryValue={setQueryValue}
+          addQuery={addQuery}/>
       </Col>
     </Row>
     <Row className="my-3">
       <Col>
-        {queryList.map(query => <QueryButton key={query.type} query={query} deleteQuery={() => deleteQuery(query.type)} />)}
+        {queryList.map(query =>
+          <QueryButton key={query.type.name} query={query} deleteQuery={() => deleteQuery(query.type.name)} />
+        )}
       </Col>
     </Row>
     <Row className="my-3">
       <Col>
-        <Table size="sm" striped>
-          <thead>
-            <tr>
-              <th>メーカー</th>
-              <th>レンズ名</th>
-              <th>価格(税抜)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {lensList2.map(lens => <tr key={lens.id}>
-              <td>{lens.maker}</td>
-              <td>{lens.name}</td>
-              <td>{lens.price}</td>
-            </tr>)}
-          </tbody>
-        </Table>
+      <LensTable lensList={lensList2} />
       </Col>
     </Row>
   </Container>);
