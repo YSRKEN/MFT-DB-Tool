@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Table, Form, Button } from 'react-bootstrap';
+import { Decimal } from 'decimal.js';
 import 'App.css';
-import { Lens, QueryTypeList } from 'constant';
+import { Lens, QueryTypeList, MilliMeterToMeterQueryTypeList, BooleanQueryTypeList } from 'constant';
 import QueryType from 'model/QueryType';
 import { createQuery } from 'utility';
 
@@ -28,12 +29,18 @@ const calcFilteredLensList = (lensList: Lens[], queryList: Query[]) => {
 };
 
 const QueryButton: React.FC<{ query: Query, deleteQuery: () => void }> = ({ query, deleteQuery }) => {
-  /*
-  const value = ['MaxWideMinFocusDistance', 'MaxTelephotoMinFocusDistance'].includes(query.type) ? query.value / 1000 : query.value;
-  const text = ['IsDripProof', 'HasImageStabilization', 'IsInnerZoom'].includes(query.type)
-    ? `${QueryTypeToTextA[query.type as string]}`
-    : `${QueryTypeToTextA[query.type as string]}${value}${QueryTypeToTextB[query.type as string]}`;
-  return <Button variant="info" className="mr-3 mt-3" onClick={deleteQuery}>{text}</Button>*/
+  // Boolean型な判定条件の場合、数値を表示する必要がない
+  if (BooleanQueryTypeList.includes(query.type.name)) {
+    return <Button variant="info" className="mr-3 mt-3" onClick={deleteQuery}>{query.type.prefixMessage}</Button>;
+  }
+
+  // 単位変換を伴う場合
+  if (MilliMeterToMeterQueryTypeList.includes(query.type.name)) {
+    const text = `${query.type.prefixMessage}${query.value / 1000}${query.type.suffixMessage}`;
+    return <Button variant="info" className="mr-3 mt-3" onClick={deleteQuery}>{text}</Button>;
+  }
+
+  // 単位変換を伴わない場合
   const text = `${query.type.prefixMessage}${query.value}${query.type.suffixMessage}`;
   return <Button variant="info" className="mr-3 mt-3" onClick={deleteQuery}>{text}</Button>;
 };
@@ -60,39 +67,34 @@ const App: React.FC = () => {
   }, [lensList, queryList]);
 
   const addQuery = () => {
+    // Boolean型な判定条件の場合
+    if (BooleanQueryTypeList.includes(queryType)) {
+      setQueryList([...queryList.filter(q => q.type.name !== queryType), createQuery(queryType, 0)]);
+      return;
+    }
+
     try {
+      // 入力チェック
       const value = parseFloat(queryValue);
       if (isNaN(value)) {
         window.alert('エラー：その条件では追加できません。');
         return;
       }
+
+      // 入力
+      if (MilliMeterToMeterQueryTypeList.includes(queryType)) {
+        // 単位変換を伴う場合
+        const temp = new Decimal(queryValue);
+        const temp2 = temp.mul(new Decimal(1000));
+        const value2 = temp2.toNumber();
+        setQueryList([...queryList.filter(q => q.type.name !== queryType), createQuery(queryType, value2)]);
+        return;
+      }
+      // 単位変換を伴わない場合
       setQueryList([...queryList.filter(q => q.type.name !== queryType), createQuery(queryType, value)]);
     } catch {
       window.alert('エラー：その条件では追加できません。');
     };
-
-/*    try {
-      if (['IsDripProof', 'HasImageStabilization', 'IsInnerZoom'].includes(queryType)) {
-        setQueryList([...queryList.filter(q => q.type !== queryType), { type: queryType, value: 0 }]);
-      } else {
-        const value = parseFloat(queryValue);
-        if (isNaN(value)) {
-          window.alert('エラー：その条件では追加できません。');
-          return;
-        }
-        if (queryType === 'MaxWideMinFocusDistance' || queryType === 'MaxTelephotoMinFocusDistance') {
-          const temp = new Decimal(queryValue);
-          const temp2 = temp.mul(new Decimal(1000));
-          const value2 = temp2.toNumber();
-          console.log(value2);
-          setQueryList([...queryList.filter(q => q.type !== queryType), { type: queryType, value: value2 }]);
-        } else {
-          setQueryList([...queryList.filter(q => q.type !== queryType), { type: queryType, value }]);
-        }
-      }
-    } catch {
-      window.alert('エラー：その条件では追加できません。');
-    };*/
   };
 
   const deleteQuery = (queryType: string) => {
@@ -117,7 +119,7 @@ const App: React.FC = () => {
                 )}
               </Form.Control>
             </Col>
-            {['IsDripProof', 'HasImageStabilization', 'IsInnerZoom'].includes(queryType)
+            {BooleanQueryTypeList.includes(queryType)
               ? <></>
               : <>
                 <Col xs={2}>

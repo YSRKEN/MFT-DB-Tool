@@ -15,6 +15,7 @@ import MaxOverallLength from "model/query/MaxOverallLength";
 import MaxWeight from "model/query/MaxWeight";
 import MaxPrice from "model/query/MaxPrice";
 
+/** レンズ情報 */
 export interface Lens {
   // レンズID
   id: number
@@ -56,6 +57,7 @@ export interface Lens {
   price: number
 }
 
+/** クエリタイプの一覧 */
 export const QueryTypeList: QueryType[] = [
   new MaxWideFocalLength(),
   new MinTelephotoFocalLength(),
@@ -73,3 +75,9 @@ export const QueryTypeList: QueryType[] = [
   new MaxWeight(),
   new MaxPrice(),
 ];
+
+/** mmからmへの単位変換を伴うクエリタイプの一覧 */
+export const MilliMeterToMeterQueryTypeList: string[] = ['MaxWideMinFocusDistance', 'MaxTelephotoMinFocusDistance'];
+
+/** boolean処理なクエリタイプの一覧 */
+export const BooleanQueryTypeList: string[] = ['IsDripProof', 'HasImageStabilization', 'IsInnerZoom'];
