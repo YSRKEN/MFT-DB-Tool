@@ -514,3 +514,29 @@ def get_s_lens_list(scraping: ScrapingService) -> List[Lens]:
         # 詳細な情報を取得する
         output.append(dict_to_lens_for_s(temp_dict))
     return output
+
+
+def get_t_lens_list():
+    return [
+        Lens(
+            id=0,
+            maker='TAMRON',
+            name='14-150mm F/3.5-5.8 Di III (Model C001)',
+            product_number='C001',
+            wide_focal_length=28,
+            telephoto_focal_length=300,
+            wide_f_number=3.5,
+            telephoto_f_number=5.8,
+            wide_min_focus_distance=500,
+            telephoto_min_focus_distance=500,
+            max_photographing_magnification=0.53,
+            filter_diameter=52,
+            is_drip_proof=False,
+            has_image_stabilization=False,
+            is_inner_zoom=False,
+            overall_diameter=63.5,
+            overall_length=80.4,
+            weight=285,
+            price=65000,
+        )
+    ]
