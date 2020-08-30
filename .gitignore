@@ -1,0 +1,7 @@
+server/pyvenv.cfg
+server/Lib/
+server/Scripts/
+server/service/__pycache__/
+server/database.db
+*.pyc
+mft-db-tool/.firebase/
