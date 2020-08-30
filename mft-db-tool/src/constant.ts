@@ -16,6 +16,7 @@ import MaxWeight from "model/query/MaxWeight";
 import MaxPrice from "model/query/MaxPrice";
 import IsPrime from "model/query/IsPrime";
 import IsZoom from "model/query/IsZoom";
+import FocalLengthRange from "model/query/FocalLengthRange";
 
 /** レンズ情報 */
 export interface Lens {
@@ -78,6 +79,7 @@ export const QueryTypeList: QueryType[] = [
   new MaxOverallLength(),
   new MaxWeight(),
   new MaxPrice(),
+  new FocalLengthRange(),
 ];
 
 /** mmからmへの単位変換を伴うクエリタイプの一覧 */
