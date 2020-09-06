@@ -73,26 +73,29 @@ const App: React.FC = () => {
   return (<Container>
     <Row className="my-3">
       <Col>
-        <h1 className="text-center">レンズデータベース</h1>
+        <h1 className="text-center d-none d-sm-block">レンズデータベース</h1>
+        <h2 className="text-center d-block d-sm-none">レンズデータベース</h2>
       </Col>
     </Row>
-    <Row className="my-3">
+    <Row className="mt-3">
       <Col>
         <AddQueryForm queryType={queryType} setQueryType={setQueryType}
           queryValue={queryValue} setQueryValue={setQueryValue}
-          addQuery={addQuery}/>
+          addQuery={addQuery} />
       </Col>
     </Row>
+    {queryList.length > 0
+      ? <Row className="my-0">
+        <Col>
+          {queryList.map(query =>
+            <QueryButton key={query.type.name} query={query} deleteQuery={() => deleteQuery(query.type.name)} />
+          )}
+        </Col>
+      </Row>
+      : <></>}
     <Row className="my-3">
       <Col>
-        {queryList.map(query =>
-          <QueryButton key={query.type.name} query={query} deleteQuery={() => deleteQuery(query.type.name)} />
-        )}
-      </Col>
-    </Row>
-    <Row className="my-3">
-      <Col>
-      <LensTable lensList={lensList2} />
+        <LensTable lensList={lensList2} />
       </Col>
     </Row>
   </Container>);
