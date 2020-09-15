@@ -2,7 +2,7 @@ from constant import DATABASE_PATH
 from service.i_database_service import IDataBaseService
 from service.lens_service import Lens, LensService
 from service.scraping_service import ScrapingService, get_p_lens_list, get_o_lens_list, get_s_lens_list, \
-    get_t_lens_list, get_other_lens_list
+    get_t_lens_list, get_other_lens_list, get_p_l_lens_list
 from service.sqlite_database_service import SqliteDataBaseService
 
 
@@ -13,6 +13,10 @@ def main():
     # パナソニック製レンズについての情報を収集する
     p_lens_list = get_p_lens_list(scraping)
     for lens in p_lens_list:
+        print(lens)
+
+    p_l_lens_list = get_p_l_lens_list(scraping)
+    for lens in p_l_lens_list:
         print(lens)
 
     # オリンパス製レンズについての情報を収集する
@@ -40,6 +44,8 @@ def main():
     lens_service.delete_all()
     for lens in p_lens_list:
         lens_service.save(lens)
+    for lens in p_l_lens_list:
+        lens_service.save(lens)
     for lens in o_lens_list:
         lens_service.save(lens)
     for lens in s_lens_list:
@@ -55,8 +61,8 @@ def main():
 def main2():
     database: IDataBaseService = SqliteDataBaseService(DATABASE_PATH)
     scraping = ScrapingService(database)
-    s_lens_list = get_s_lens_list(scraping)
-    for lens in s_lens_list:
+    lens_list = get_p_l_lens_list(scraping)
+    for lens in lens_list:
         print(lens)
 
 
