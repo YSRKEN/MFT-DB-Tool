@@ -157,6 +157,7 @@ def dict_to_lens_for_p(record: Dict[str, str]) -> Lens:
         overall_length=overall_length,
         weight=weight,
         price=price,
+        mount='マイクロフォーサーズ',
     )
 
 
@@ -315,6 +316,7 @@ def dict_to_lens_for_o(record: Dict[str, str], record2: Dict[str, str]) -> Lens:
         overall_length=overall_length,
         weight=weight,
         price=price,
+        mount='マイクロフォーサーズ',
     )
 
 
@@ -466,6 +468,7 @@ def dict_to_lens_for_s(record: Dict[str, str]) -> Lens:
         overall_length=overall_length,
         weight=weight,
         price=price,
+        mount='マイクロフォーサーズ',
     )
 
 
@@ -538,6 +541,7 @@ def get_t_lens_list():
             overall_length=80.4,
             weight=285,
             price=65000,
+            mount='マイクロフォーサーズ',
         )
     ]
 
@@ -564,6 +568,7 @@ def get_other_lens_list():
             overall_length=66,
             weight=298,
             price=40000,
+            mount='マイクロフォーサーズ',
         ),
         Lens(
             id=0,
@@ -585,6 +590,7 @@ def get_other_lens_list():
             overall_length=112,
             weight=495,
             price=22000,
+            mount='マイクロフォーサーズ',
         ),
         Lens(
             id=0,
@@ -606,6 +612,7 @@ def get_other_lens_list():
             overall_length=82.4,
             weight=585,
             price=148000,
+            mount='マイクロフォーサーズ',
         ),
         Lens(
             id=0,
@@ -627,6 +634,7 @@ def get_other_lens_list():
             overall_length=80.0,
             weight=540,
             price=118000,
+            mount='マイクロフォーサーズ',
         ),
         Lens(
             id=0,
@@ -648,6 +656,7 @@ def get_other_lens_list():
             overall_length=70.0,
             weight=435,
             price=105000,
+            mount='マイクロフォーサーズ',
         ),
         Lens(
             id=0,
@@ -669,6 +678,7 @@ def get_other_lens_list():
             overall_length=74.6,
             weight=571,
             price=118000,
+            mount='マイクロフォーサーズ',
         ),
         Lens(
             id=0,
@@ -690,6 +700,7 @@ def get_other_lens_list():
             overall_length=87.7,
             weight=860,
             price=145000,
+            mount='マイクロフォーサーズ',
         ),
 
         Lens(
@@ -712,6 +723,7 @@ def get_other_lens_list():
             overall_length=86.8,
             weight=440,
             price=116000,
+            mount='マイクロフォーサーズ',
         ),
         Lens(
             id=0,
@@ -733,6 +745,7 @@ def get_other_lens_list():
             overall_length=90.5,
             weight=475,
             price=109000,
+            mount='マイクロフォーサーズ',
         ),
         Lens(
             id=0,
@@ -754,5 +767,6 @@ def get_other_lens_list():
             overall_length=94,
             weight=400,
             price=89000,
+            mount='マイクロフォーサーズ',
         )
     ]
