@@ -72,7 +72,9 @@ const LensTable: React.FC<{ lensList: Lens[] }> = ({ lensList }) => {
                 <li>その他属性：
                   {lensListA[lensIndex].is_drip_proof ? '防塵防滴　' : ''}
                   {lensListA[lensIndex].has_image_stabilization ? 'レンズ内手ブレ補正　' : ''}
-                  {lensListA[lensIndex].is_inner_zoom ? 'インナーズーム　' : ''}</li>
+                  {lensListA[lensIndex].is_inner_zoom
+                  && lensListA[lensIndex].wide_focal_length !== lensListA[lensIndex].telephoto_focal_length
+                  ? 'インナーズーム　' : ''}</li>
               </ul>
             </td>
         </tr>
