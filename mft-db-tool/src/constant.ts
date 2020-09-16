@@ -19,6 +19,7 @@ import IsZoom from "model/query/IsZoom";
 import FocalLengthRange from "model/query/FocalLengthRange";
 import IsMicroFourThirds from "model/query/IsMicroFourThirds";
 import IsLeicaL from "model/query/IsLeicaL";
+import IsLensFilter from "model/query/IsLensFilter";
 
 /** レンズ情報 */
 export interface Lens {
@@ -74,6 +75,7 @@ export const QueryTypeList: QueryType[] = [
   new MaxTelephotoMinFocusDistance(),
   new MinMaxPhotographingMagnification(),
   new FilterDiameter(),
+  new IsLensFilter(),
   new IsDripProof(),
   new HasImageStabilization(),
   new IsInnerZoom(),
@@ -92,7 +94,7 @@ export const QueryTypeList: QueryType[] = [
 export const MilliMeterToMeterQueryTypeList: string[] = ['MaxWideMinFocusDistance', 'MaxTelephotoMinFocusDistance'];
 
 /** boolean処理なクエリタイプの一覧 */
-export const BooleanQueryTypeList: string[] = ['IsDripProof', 'HasImageStabilization', 'IsInnerZoom', 'IsPrime', 'IsZoom', 'IsMicroFourThirds', 'IsLeicaL'];
+export const BooleanQueryTypeList: string[] = ['IsDripProof', 'HasImageStabilization', 'IsInnerZoom', 'IsPrime', 'IsZoom', 'IsMicroFourThirds', 'IsLeicaL', 'IsLensFilter'];
 
 /** クエリ */
 export interface Query {
