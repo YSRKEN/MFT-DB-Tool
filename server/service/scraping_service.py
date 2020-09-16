@@ -765,7 +765,7 @@ def dict_to_lens_for_s_l(record: Dict[str, str]) -> Lens:
         overall_length=overall_length,
         weight=weight,
         price=price,
-        mount='ライカLマウント',
+        mount='ライカL',
     )
 
 
@@ -860,8 +860,6 @@ def dict_to_lens_for_l_l(record: Dict[str, str]) -> Lens:
         レンズデータ
     """
 
-    print(f"[{record['Working range']}]")
-
     # 品番
     product_number = ''
     if 'Order number' in record:
@@ -889,17 +887,76 @@ def dict_to_lens_for_l_l(record: Dict[str, str]) -> Lens:
         wide_f_number = float(result2[0])
         telephoto_f_number = wide_f_number
 
-    """
-        # 最短撮影距離(m単位のものをmm単位に変換していることに注意)
-    result1 = regex(record['最短撮影距離'], r'(\d+\.?\d*)m / (\d+\.?\d*)m')
-    result2 = regex(record['最短撮影距離'], r'(\d+\.?\d*)m')
-    if len(result1) > 0:
-        wide_min_focus_distance = int(Decimal(result1[0]).scaleb(3))
-        telephoto_min_focus_distance = int(Decimal(result1[1]).scaleb(3))
+    # 最短撮影距離
+    wide_min_focus_distance = 0
+    telephoto_min_focus_distance = 0
+    temp = record['Working range'].split('\n')
+    if len(temp) == 1:
+        result1 = regex(temp[0], r'∞ to (\d+\.?\d*) m')
+        result2 = regex(temp[0], r'(\d+\.?\d*) m to infinity')
+        result3 = regex(temp[0], r'(\d+\.?\d*)mm to infinity')
+        if len(result1) > 0:
+            wide_min_focus_distance = int(Decimal(result1[0]).scaleb(3))
+            telephoto_min_focus_distance = wide_min_focus_distance
+        elif len(result2) > 0:
+            wide_min_focus_distance = int(Decimal(result2[0]).scaleb(3))
+            telephoto_min_focus_distance = wide_min_focus_distance
+        elif len(result3) > 0:
+            wide_min_focus_distance = int(result3[0])
+            telephoto_min_focus_distance = wide_min_focus_distance
     else:
-        wide_min_focus_distance = int(Decimal(result2[0]).scaleb(3))
-        telephoto_min_focus_distance = wide_min_focus_distance
-    """
+        temp2: Dict[int, int] = {}
+        for temp3 in temp:
+            result = regex(temp3, r'[Ff]ocal length (\d+) mm: (\d+\.?\d*) m to infinity')
+            if len(result) > 0:
+                temp2[int(result[0])] = int(Decimal(result[1]).scaleb(3))
+        wide_min_focus_distance = temp2[wide_focal_length]
+        telephoto_min_focus_distance = temp2[telephoto_focal_length]
+
+    # 最大撮影倍率
+    max_photographing_magnification = 0
+    temp = record['Largest reproduction ratio'].split('\n')
+    if len(temp) == 1:
+        result = regex(temp[0], r'(\d+\.?\d*):(\d+\.?\d*)')
+        if len(result) > 0:
+            max_photographing_magnification = round(float(result[0]) * 100 / float(result[1])) / 100
+    else:
+        for temp3 in temp:
+            result = regex(temp3, r'[Ff]ocal length.*mm: (\d+\.?\d*):(\d+\.?\d*)')
+            if len(result) > 0:
+                temp3 = round(float(result[0]) * 100 / float(result[1])) / 100
+                max_photographing_magnification = max(max_photographing_magnification, temp3)
+
+    # フィルター径
+    filter_diameter = int(record['Filter mount'].replace('E', ''))
+
+    # 防塵防滴、手ブレ補正、インナーズーム
+    is_drip_proof = False
+    has_image_stabilization = 'O.I.S. Performance as per CIPA' in record
+    is_inner_zoom = False
+    if wide_focal_length == telephoto_focal_length:
+        is_inner_zoom = True
+    if record['レンズ名'] == 'APO VARIO-ELMARIT-SL90–280 f/2.8–4':
+        is_inner_zoom = True
+
+    # 最大径、全長、質量
+    overall_diameter = 0
+    result = regex(record['Largest diameter'], r'(\d+\.?\d*)[^\d]*mm')
+    if len(result) > 0:
+        overall_diameter = float(result[0])
+    overall_length = 0
+    if 'Length to bayonet mount' in record:
+        result = regex(record['Length to bayonet mount'], r'(\d+\.?\d*)[^\d]*mm')
+        if len(result) > 0:
+            overall_length = float(result[0])
+    if 'Length to bayonet flange' in record:
+        result = regex(record['Length to bayonet flange'], r'(\d+\.?\d*)[^\d]*mm')
+        if len(result) > 0:
+            overall_length = float(result[0])
+    weight = 0
+    result = regex(record['Weight'], r'(\d+\.?\d*)[^\d]*g')
+    if len(result) > 0:
+        weight = float(result[0].replace('.', ''))
 
     return Lens(
         id=0,
@@ -909,7 +966,18 @@ def dict_to_lens_for_l_l(record: Dict[str, str]) -> Lens:
         wide_focal_length=wide_focal_length,
         telephoto_focal_length=telephoto_focal_length,
         wide_f_number=wide_f_number,
-        telephoto_f_number=telephoto_f_number
+        telephoto_f_number=telephoto_f_number,
+        wide_min_focus_distance=wide_min_focus_distance,
+        telephoto_min_focus_distance=telephoto_min_focus_distance,
+        max_photographing_magnification=max_photographing_magnification,
+        filter_diameter=filter_diameter,
+        is_drip_proof=is_drip_proof,
+        has_image_stabilization=has_image_stabilization,
+        is_inner_zoom=is_inner_zoom,
+        overall_diameter=overall_diameter,
+        overall_length=overall_length,
+        weight=weight,
+        mount='ライカL'
     )
 
 

@@ -37,6 +37,11 @@ def main():
     for lens in t_lens_list:
         print(lens)
 
+    # ライカ製レンズについての情報を収集する
+    l_l_lens_list = get_l_l_lens_list(scraping)
+    for lens in l_l_lens_list:
+        print(lens)
+
     # その他レンズについての情報を収集する
     other_lens_list = get_other_lens_list()
     for lens in other_lens_list:
@@ -57,6 +62,8 @@ def main():
         lens_service.save(lens)
     for lens in t_lens_list:
         lens_service.save(lens)
+    for lens in l_l_lens_list:
+        lens_service.save(lens)
     for lens in other_lens_list:
         lens_service.save(lens)
     with open('lens_data.json', 'w') as f:
@@ -67,12 +74,10 @@ def main2():
     database: IDataBaseService = SqliteDataBaseService(DATABASE_PATH)
     scraping = ScrapingService(database)
     lens_list = get_l_l_lens_list(scraping)
-    print('')
     for lens in lens_list:
         print(lens)
-        print(f'  {lens.wide_min_focus_distance} {lens.telephoto_min_focus_distance}')
 
 
 if __name__ == '__main__':
-    # main()
-    main2()
+    main()
+    # main2()
