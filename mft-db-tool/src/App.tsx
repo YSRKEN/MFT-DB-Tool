@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col } from 'react-bootstrap';
+import { Container, Row, Col, Form, Button } from 'react-bootstrap';
 import { Decimal } from 'decimal.js';
 import 'App.css';
-import { Lens, MilliMeterToMeterQueryTypeList, BooleanQueryTypeList, Query } from 'constant';
-import { createQuery, calcFilteredLensList, parseFloat2 } from 'utility';
+import { Lens, MilliMeterToMeterQueryTypeList, BooleanQueryTypeList, Query, QueryTypeList } from 'constant';
+import { createQuery, calcFilteredLensList, parseFloat2, queryListToqueryString } from 'utility';
 import QueryButton from 'component/QueryButton';
 import LensTable from 'component/LensTable';
 import AddQueryForm from 'component/AddQueryForm';
@@ -22,6 +22,8 @@ const App: React.FC = () => {
   const [queryValue, setQueryValue] = useState<string>('');
   // クエリ一覧
   const [queryList, setQueryList] = useState<Query[]>([]);
+  // シェア用のクエリパラメーター
+  const [queryParameter, setQueryParameter] = useState('');
 
   /** 起動時の読み込み */
   useEffect(() => {
@@ -34,6 +36,34 @@ const App: React.FC = () => {
     });
   }, []);
 
+  /** GETパラメーターの解釈 */
+  useEffect(() => {
+    const newQueryList: Query[] = [];
+    const params = new URLSearchParams(document.location.search.substring(1));
+    for (const queryType of QueryTypeList) {
+      let val = params.get(queryType.name);
+      if (val === null) {
+        val = params.get(queryType.name.toLowerCase());
+        if (val === null) {
+          continue;
+        }
+      }
+      const valFloat = parseFloat2(val);
+      if (valFloat !== null) {
+        newQueryList.push({
+          type: queryType,
+          value: valFloat
+        });
+      }
+    }
+    setQueryList(newQueryList);
+  }, []);
+
+  /** 自動でクエリパラメーター情報を修正 */
+  useEffect(() => {
+    setQueryParameter(queryListToqueryString(queryList));
+  }, [queryList]);
+  
   // 自動でフィルタしておく
   useEffect(() => {
     setLensList2(calcFilteredLensList(lensList, queryList));
@@ -72,6 +102,13 @@ const App: React.FC = () => {
     setQueryList(queryList.filter(q => q.type.name !== queryType));
   };
 
+  // 検索URLをクリップボードにコピー
+  const copyUrl = () => {
+    if(navigator.clipboard){
+      navigator.clipboard.writeText("https://mft-db-tool.web.app/" + queryParameter);
+    }
+  };
+
   return (<Container>
     <Row className="my-3">
       <Col>
@@ -101,10 +138,21 @@ const App: React.FC = () => {
           　(例：フィルター径を52mm→62mmに変更する)<br />
           ・レンズ一覧において「詳細」ボタンを押すと、そのレンズの詳細情報が表示されます。<br />
           ・価格が0円になっているものは、メーカー希望小売価格が不明なものです。<br />
+          ・検索条件を含めたURLをシェアしたり、クリップボードにコピーしたりできます。<br/>
           ・当WebアプリはPWA技術に対応しています。スマホで見ている場合、Webページを「ホーム画面に追加」することができます。<br />
           　(ホーム画面に追加すると、ホーム画面のアイコンをタップするだけで起動できる)
           </p>
         </details>
+      </Col>
+    </Row>
+    <Row className="mt-3">
+      <Col>
+        <Form>
+          <TwitterShareButton url={"https://mft-db-tool.web.app/" + queryParameter} title={"検索条件をシェア"}>
+            <Button>検索条件をシェア</Button>
+          </TwitterShareButton>
+          <Button className="ml-3" onClick={copyUrl}>検索URLをコピー</Button>
+        </Form>
       </Col>
     </Row>
     <Row className="mt-3">
