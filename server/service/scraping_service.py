@@ -673,23 +673,6 @@ def dict_to_lens_for_s_l(record: Dict[str, str]) -> Lens:
         レンズデータ
     """
 
-    x = {'レンズ構成枚数': '16群22枚',
-         '画角 (35mm)': '24.4° - 6.2°',
-         '絞り羽根枚数': '9枚(円形絞り)',
-         '最小絞り': 'F22 - 29',
-         '最短撮影距離': '112(W) - 160(T)cm',
-         '最大撮影倍率': '1:4.1(400mm時)',
-         'フィルターサイズ': 'φ67mm',
-         '最大径 × 長さ Lマウント': 'φ86.0mm × 197.2mm',
-         '最大径 × 長さ ソニー Eマウント': 'φ86.0mm × 199.2mm',
-         '質量 Lマウント': '1,135g\n(PROTECTIVE COVER PT-31を含む)',
-         '質量 ソニー Eマウント': '1,140g\n(PROTECTIVE COVER PT-31を含む)',
-         'エディションナンバー※': 'C020',
-         '希望小売価格': '120,000円',
-         '付属品': 'フード(LH770-05)、PROTECTIVE COVER PT-31',
-         'レンズ名': '100-400mm F5-6.3 DG DN OS',
-         '品番': 'c020_100_400_5_63'}
-
     # 焦点距離
     result1 = regex(record['レンズ名'], r'(\d+)-(\d+)mm')
     result2 = regex(record['レンズ名'], r'(\d+)mm')
@@ -862,6 +845,123 @@ def get_t_lens_list():
             mount='マイクロフォーサーズ',
         )
     ]
+
+
+def dict_to_lens_for_l_l(record: Dict[str, str]) -> Lens:
+    """辞書型をレンズデータに変換する
+
+    Parameters
+    ----------
+    record: Dict[str, str]
+        辞書型
+
+    Returns
+    -------
+        レンズデータ
+    """
+
+    print(f"[{record['Working range']}]")
+
+    # 品番
+    product_number = ''
+    if 'Order number' in record:
+        product_number = record['Order number'].replace(' ', '')
+    if 'Order-number' in record:
+        product_number = record['Order-number'].replace(' ', '')
+
+    # 焦点距離
+    result1 = regex(record['レンズ名'], r'SL(\d+)–(\d+)')
+    result2 = regex(record['レンズ名'], r'SL(\d+)')
+    if len(result1) > 0:
+        wide_focal_length = int(result1[0])
+        telephoto_focal_length = int(result1[1])
+    else:
+        wide_focal_length = int(result2[0])
+        telephoto_focal_length = wide_focal_length
+
+    # F値
+    result1 = regex(record['レンズ名'], r'f/(\d+\.?\d*)–(\d+\.?\d*)')
+    result2 = regex(record['レンズ名'], r'f/(\d+\.?\d*)')
+    if len(result1) > 0:
+        wide_f_number = float(result1[0])
+        telephoto_f_number = float(result1[1])
+    else:
+        wide_f_number = float(result2[0])
+        telephoto_f_number = wide_f_number
+
+    """
+        # 最短撮影距離(m単位のものをmm単位に変換していることに注意)
+    result1 = regex(record['最短撮影距離'], r'(\d+\.?\d*)m / (\d+\.?\d*)m')
+    result2 = regex(record['最短撮影距離'], r'(\d+\.?\d*)m')
+    if len(result1) > 0:
+        wide_min_focus_distance = int(Decimal(result1[0]).scaleb(3))
+        telephoto_min_focus_distance = int(Decimal(result1[1]).scaleb(3))
+    else:
+        wide_min_focus_distance = int(Decimal(result2[0]).scaleb(3))
+        telephoto_min_focus_distance = wide_min_focus_distance
+    """
+
+    return Lens(
+        id=0,
+        maker='LEICA',
+        name=record['レンズ名'],
+        product_number=product_number,
+        wide_focal_length=wide_focal_length,
+        telephoto_focal_length=telephoto_focal_length,
+        wide_f_number=wide_f_number,
+        telephoto_f_number=telephoto_f_number
+    )
+
+
+def get_l_l_lens_list(scraping: ScrapingService) -> List[Lens]:
+    """ライカ製レンズの情報を取得する
+
+    Parameters
+    ----------
+    scraping: ScrapingService
+        データスクレイピング用クラス
+
+    Returns
+    -------
+        スクレイピング後のレンズデータ一覧
+    """
+
+    # レンズのURL一覧を取得する
+    lens_list: List[Tuple[str, str]] = []
+    page_list = [
+        'https://us.leica-camera.com/Photography/Leica-SL/SL-Lenses/Prime-Lenses',
+        'https://us.leica-camera.com/Photography/Leica-SL/SL-Lenses/Vario-Lenses'
+    ]
+    for page_url in page_list:
+        page = scraping.get_page(page_url)
+        for div_element in page.find_all('div.h2-text-image-multi-layout.module.no-border'):
+            h2_element = div_element.find('h2.headline-40')
+            if h2_element is None:
+                continue
+            span_element = h2_element.find('span')
+            if span_element is None:
+                continue
+            a_element = div_element.find('a.red_cta')
+            if a_element is None:
+                continue
+            lens_name = h2_element.text.replace('\n', '').replace(span_element.text, '')
+            lens_url = 'https://us.leica-camera.com' + a_element.attrs['href']
+            lens_list.append((lens_name, lens_url))
+
+    # レンズの情報を取得する
+    output: List[Lens] = []
+    for lens_name, lens_url in lens_list:
+        page = scraping.get_page(lens_url)
+        temp: Dict[str, str] = {'レンズ名': lens_name}
+        section_element = page.find('section.tech-specs')
+        if section_element is not None:
+            for tr_element in section_element.find_all('tr'):
+                td_elements = tr_element.find_all('td')
+                if len(td_elements) < 2:
+                    continue
+                temp[td_elements[0].text] = td_elements[1].text
+            output.append(dict_to_lens_for_l_l(temp))
+    return output
 
 
 def get_other_lens_list():

@@ -2,7 +2,7 @@ from constant import DATABASE_PATH
 from service.i_database_service import IDataBaseService
 from service.lens_service import Lens, LensService
 from service.scraping_service import ScrapingService, get_p_lens_list, get_o_lens_list, get_s_lens_list, \
-    get_t_lens_list, get_other_lens_list, get_p_l_lens_list, get_s_l_lens_list
+    get_t_lens_list, get_other_lens_list, get_p_l_lens_list, get_s_l_lens_list, get_l_l_lens_list
 from service.sqlite_database_service import SqliteDataBaseService
 
 
@@ -66,11 +66,13 @@ def main():
 def main2():
     database: IDataBaseService = SqliteDataBaseService(DATABASE_PATH)
     scraping = ScrapingService(database)
-    lens_list = get_s_l_lens_list(scraping)
+    lens_list = get_l_l_lens_list(scraping)
+    print('')
     for lens in lens_list:
         print(lens)
+        print(f'  {lens.wide_min_focus_distance} {lens.telephoto_min_focus_distance}')
 
 
 if __name__ == '__main__':
-    main()
-    # main2()
+    # main()
+    main2()
