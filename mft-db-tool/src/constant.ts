@@ -17,6 +17,8 @@ import MaxPrice from "model/query/MaxPrice";
 import IsPrime from "model/query/IsPrime";
 import IsZoom from "model/query/IsZoom";
 import FocalLengthRange from "model/query/FocalLengthRange";
+import IsMicroFourThirds from "model/query/IsMicroFourThirds";
+import IsLeicaL from "model/query/IsLeicaL";
 
 /** レンズ情報 */
 export interface Lens {
@@ -58,6 +60,8 @@ export interface Lens {
   weight: number
   // メーカー希望小売価格[円]
   price: number
+  // レンズマウント
+  mount: string
 }
 
 /** クエリタイプの一覧 */
@@ -80,13 +84,15 @@ export const QueryTypeList: QueryType[] = [
   new MaxWeight(),
   new MaxPrice(),
   new FocalLengthRange(),
+  new IsMicroFourThirds(),
+  new IsLeicaL(),
 ];
 
 /** mmからmへの単位変換を伴うクエリタイプの一覧 */
 export const MilliMeterToMeterQueryTypeList: string[] = ['MaxWideMinFocusDistance', 'MaxTelephotoMinFocusDistance'];
 
 /** boolean処理なクエリタイプの一覧 */
-export const BooleanQueryTypeList: string[] = ['IsDripProof', 'HasImageStabilization', 'IsInnerZoom', 'IsPrime', 'IsZoom'];
+export const BooleanQueryTypeList: string[] = ['IsDripProof', 'HasImageStabilization', 'IsInnerZoom', 'IsPrime', 'IsZoom', 'IsMicroFourThirds', 'IsLeicaL'];
 
 /** クエリ */
 export interface Query {
