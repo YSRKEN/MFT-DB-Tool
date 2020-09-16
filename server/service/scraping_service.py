@@ -11,6 +11,7 @@ from service.ulitity import regex
 
 class DomObject:
     """DOMオブジェクト"""
+
     def __init__(self, base_parser: BaseParser):
         self.base_parser = base_parser
 
@@ -40,6 +41,7 @@ class DomObject:
 
 class ScrapingService:
     """スクレイピング用のラッパークラス"""
+
     def __init__(self, database: IDataBaseService):
         self.session = HTMLSession()
         self.database = database
@@ -329,11 +331,6 @@ def get_p_l_lens_list(scraping: ScrapingService) -> List[Lens]:
                 df[key] = value
         break
 
-    import pandas
-    pandas.options.display.max_columns = None
-    pandas.options.display.width = 150
-    print(df)
-
     # tableタグの各行を、Lens型のデータに変換する
     return [dict_to_lens_for_p_l(x) for x in df.to_dict(orient='records')]
 
@@ -494,7 +491,6 @@ def get_o_lens_list(scraping: ScrapingService) -> List[Lens]:
     for lens_name, lens_product_number in lens_list:
         # ざっくり情報を取得する
         spec_url = f'https://www.olympus-imaging.jp/product/dslr/mlens/{lens_product_number}/spec.html'
-        print(spec_url)
         page = scraping.get_page(spec_url)
         temp_dict: Dict[str, str] = {}
         for th_element, td_element in zip(page.find_all('th'), page.find_all('td')):
@@ -505,7 +501,6 @@ def get_o_lens_list(scraping: ScrapingService) -> List[Lens]:
         temp_dict['品番'] = lens_product_number
 
         index_url = f'https://www.olympus-imaging.jp/product/dslr/mlens/{lens_product_number}/index.html'
-        print(f'  {index_url}')
         page = scraping.get_page(index_url)
         temp_dict2: Dict[str, str] = {}
         for th_element, td_element in zip(page.find_all('th'), page.find_all('td')):
@@ -563,7 +558,7 @@ def dict_to_lens_for_s(record: Dict[str, str]) -> Lens:
 
     # 換算最大撮影倍率
     result = regex(record['最大撮影倍率'], r'(\d+\.?\d*)：(\d+\.?\d*)')
-    max_photographing_magnification = round(float(result[0]) / float(result[1]) * 2 * 100) / 100
+    max_photographing_magnification = round(float(result[0]) * 2 * 100 / float(result[1])) / 100
 
     # フィルターサイズ
     result = regex(record['フィルターサイズ'], r'φ(\d+)mm')
@@ -662,6 +657,183 @@ def get_s_lens_list(scraping: ScrapingService) -> List[Lens]:
 
         # 詳細な情報を取得する
         output.append(dict_to_lens_for_s(temp_dict))
+    return output
+
+
+def dict_to_lens_for_s_l(record: Dict[str, str]) -> Lens:
+    """辞書型をレンズデータに変換する
+
+    Parameters
+    ----------
+    record: Dict[str, str]
+        辞書型
+
+    Returns
+    -------
+        レンズデータ
+    """
+
+    x = {'レンズ構成枚数': '16群22枚',
+         '画角 (35mm)': '24.4° - 6.2°',
+         '絞り羽根枚数': '9枚(円形絞り)',
+         '最小絞り': 'F22 - 29',
+         '最短撮影距離': '112(W) - 160(T)cm',
+         '最大撮影倍率': '1:4.1(400mm時)',
+         'フィルターサイズ': 'φ67mm',
+         '最大径 × 長さ Lマウント': 'φ86.0mm × 197.2mm',
+         '最大径 × 長さ ソニー Eマウント': 'φ86.0mm × 199.2mm',
+         '質量 Lマウント': '1,135g\n(PROTECTIVE COVER PT-31を含む)',
+         '質量 ソニー Eマウント': '1,140g\n(PROTECTIVE COVER PT-31を含む)',
+         'エディションナンバー※': 'C020',
+         '希望小売価格': '120,000円',
+         '付属品': 'フード(LH770-05)、PROTECTIVE COVER PT-31',
+         'レンズ名': '100-400mm F5-6.3 DG DN OS',
+         '品番': 'c020_100_400_5_63'}
+
+    # 焦点距離
+    result1 = regex(record['レンズ名'], r'(\d+)-(\d+)mm')
+    result2 = regex(record['レンズ名'], r'(\d+)mm')
+    if len(result1) > 0:
+        wide_focal_length = int(result1[0])
+        telephoto_focal_length = int(result1[1])
+    else:
+        wide_focal_length = int(result2[0])
+        telephoto_focal_length = wide_focal_length
+
+    # F値
+    result1 = regex(record['レンズ名'], r'F(\d+\.?\d*)-(\d+\.?\d*)')
+    result2 = regex(record['レンズ名'], r'F(\d+\.?\d*)')
+    if len(result1) > 0:
+        wide_f_number = float(result1[0])
+        telephoto_f_number = float(result1[1])
+    else:
+        wide_f_number = float(result2[0])
+        telephoto_f_number = wide_f_number
+
+    # 最短撮影距離(cm単位のものをmm単位に変換していることに注意)
+    result1 = regex(record['最短撮影距離'], r'(\d+\.?\d*).*-.*(\d+\.?\d*).*cm')
+    result2 = regex(record['最短撮影距離'], r'(\d+\.?\d*)cm')
+    if len(result1) > 0:
+        wide_min_focus_distance = int(Decimal(result1[0]).scaleb(1))
+        telephoto_min_focus_distance = int(Decimal(result1[1]).scaleb(1))
+    else:
+        wide_min_focus_distance = int(Decimal(result2[0]).scaleb(1))
+        telephoto_min_focus_distance = wide_min_focus_distance
+
+    # 最大撮影倍率
+    result1 = regex(record['最大撮影倍率'], r'(\d+\.?\d*)[:：](\d+\.?\d*).*-.*(\d+\.?\d*)[:：](\d+\.?\d*)')
+    result2 = regex(record['最大撮影倍率'], r'(\d+\.?\d*)[:：](\d+\.?\d*)')
+    if len(result1) > 0:
+        temp1 = round(float(result1[0]) * 100 / float(result1[1])) / 100
+        temp2 = round(float(result1[2]) * 100 / float(result1[3])) / 100
+        max_photographing_magnification = max(temp1, temp2)
+    else:
+        max_photographing_magnification = round(float(result2[0]) * 100 / float(result2[1])) / 100
+
+    # フィルターサイズ
+    if 'フィルターサイズ' in record:
+        result = regex(record['フィルターサイズ'], r'φ(\d+)mm')
+        if len(result) > 0:
+            filter_diameter = int(result[0])
+        else:
+            filter_diameter = -1
+    else:
+        filter_diameter = -1
+
+    # 最大径と全長
+    result = regex(record['最大径 × 長さ Lマウント'], r'(\d+\.?\d*)mm[^\d]*(\d+\.?\d*)mm')
+    overall_diameter = float(result[0])
+    overall_length = float(result[1])
+
+    # 防塵防滴
+    is_drip_proof = '防塵防滴' in record
+
+    # 手ブレ補正
+    has_image_stabilization = 'OS' in record['レンズ名']
+
+    # インナーズーム
+    is_inner_zoom = wide_focal_length == telephoto_focal_length
+
+    # 質量
+    result = regex(record['質量 Lマウント'], r'([\d,]+)g')
+    weight = int(result[0].replace(',', ''))
+
+    # メーカー希望小売価格
+    result = regex(record['希望小売価格'], r'([\d,]+) *円')
+    price = int(result[0].replace(',', ''))
+
+    return Lens(
+        id=0,
+        maker='SIGMA',
+        name=record['レンズ名'],
+        product_number=record['品番'],
+        wide_focal_length=wide_focal_length,
+        telephoto_focal_length=telephoto_focal_length,
+        wide_f_number=wide_f_number,
+        telephoto_f_number=telephoto_f_number,
+        wide_min_focus_distance=wide_min_focus_distance,
+        telephoto_min_focus_distance=telephoto_min_focus_distance,
+        max_photographing_magnification=max_photographing_magnification,
+        filter_diameter=filter_diameter,
+        is_drip_proof=is_drip_proof,
+        has_image_stabilization=has_image_stabilization,
+        is_inner_zoom=is_inner_zoom,
+        overall_diameter=overall_diameter,
+        overall_length=overall_length,
+        weight=weight,
+        price=price,
+        mount='ライカLマウント',
+    )
+
+
+def get_s_l_lens_list(scraping: ScrapingService) -> List[Lens]:
+    """SIGMA製レンズの情報を取得する
+
+    Parameters
+    ----------
+    scraping: ScrapingService
+        データスクレイピング用クラス
+
+    Returns
+    -------
+        スクレイピング後のレンズデータ一覧
+    """
+
+    # レンズのURL一覧を取得する
+    page = scraping.get_page('https://www.sigma-global.com/jp/lenses/#/all/l-mount/')
+    lens_list: List[Tuple[str, str]] = []
+    for li_element in page.find_all('li.l-mount'):
+        lens_link = 'https://www.sigma-global.com/' + li_element.find('a').attrs['href']
+        if 'product' not in lens_link:
+            continue
+        lens_name = li_element.text.splitlines()[1]
+        lens_list.append((lens_name, lens_link))
+
+    # レンズごとに情報を取得する
+    output: List[Lens] = []
+    for lens_name, lens_link in lens_list:
+        # ざっくり情報を取得する
+        page = scraping.get_page(lens_link + 'specifications/')
+        temp_dict: Dict[str, str] = {}
+        th_text = ''
+        for tr_element in page.find('table').find_all('tr'):
+            th_elements = tr_element.find_all('th')
+            if len(th_elements) > 0:
+                th_text = th_elements[0].text
+            td_elements = tr_element.find_all('td')
+            if len(td_elements) == 1:
+                temp_dict[th_text] = td_elements[0].text
+            elif len(td_elements) == 2:
+                temp_dict[th_text + ' ' + td_elements[0].text] = td_elements[1].text
+        temp_dict['レンズ名'] = lens_name
+        temp_dict['品番'] = lens_link.split('/')[-2]
+
+        page = scraping.get_page(lens_link + 'features/')
+        if '防塵防滴' in page.full_text:
+            temp_dict['防塵防滴'] = '○'
+
+        # 詳細な情報を取得する
+        output.append(dict_to_lens_for_s_l(temp_dict))
     return output
 
 
