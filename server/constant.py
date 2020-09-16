@@ -27,3 +27,4 @@ class Lens:
     overall_length: float = 0
     weight: float = 0
     price: int = 0
+    mount: str = ''
