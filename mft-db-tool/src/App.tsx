@@ -7,6 +7,8 @@ import { createQuery, calcFilteredLensList, parseFloat2 } from 'utility';
 import QueryButton from 'component/QueryButton';
 import LensTable from 'component/LensTable';
 import AddQueryForm from 'component/AddQueryForm';
+import TwitterShareButton from 'react-share/lib/TwitterShareButton';
+import TwitterIcon from 'react-share/lib/TwitterIcon';
 
 /** メインとなるComponent */
 const App: React.FC = () => {
@@ -75,6 +77,34 @@ const App: React.FC = () => {
       <Col>
         <h1 className="text-center d-none d-sm-block">レンズデータベース</h1>
         <h2 className="text-center d-block d-sm-none">レンズデータベース</h2>
+      </Col>
+    </Row>
+    <Row className="my-3">
+      <Col>
+        <a href="https://github.com/YSRKEN/MFT-DB-Tool">GitHub</a>
+        <span>　</span>
+        <a href="https://twitter.com/YSRKEN">作者のTwitter</a>
+        <span>　</span>
+        <TwitterShareButton url={"https://mft-db-tool.web.app/"} title={"レンズデータベース(マイクロフォーサーズ, ライカL マウント向け。スマホ対応！)"}>
+          <TwitterIcon size={32} round />
+        </TwitterShareButton>
+      </Col>
+    </Row>
+    <Row className="my-3">
+      <Col>
+        <details>
+          <summary>このWebアプリの使用方法</summary>
+          <p>
+            ・検索条件を「追加」すると、検索条件を表すボタンが追加され、その下のレンズ一覧がフィルタリングされます。<br />
+          ・検索条件を表すボタンをクリックすると、その検索条件が削除されます。<br />
+          ・検索条件を表すボタンは、同種の検索条件追加操作で上書きされます。<br />
+          　(例：フィルター径を52mm→62mmに変更する)<br />
+          ・レンズ一覧において「詳細」ボタンを押すと、そのレンズの詳細情報が表示されます。<br />
+          ・価格が0円になっているものは、メーカー希望小売価格が不明なものです。<br />
+          ・当WebアプリはPWA技術に対応しています。スマホで見ている場合、Webページを「ホーム画面に追加」することができます。<br />
+          　(ホーム画面に追加すると、ホーム画面のアイコンをタップするだけで起動できる)
+          </p>
+        </details>
       </Col>
     </Row>
     <Row className="mt-3">
