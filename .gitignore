@@ -5,3 +5,4 @@ server/service/__pycache__/
 server/database.db
 *.pyc
 mft-db-tool/.firebase/
+server/lens_data.json

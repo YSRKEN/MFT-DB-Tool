@@ -50,3 +50,19 @@ export const parseFloat2 = (text: string): number | null => {
     return null;
   }
 };
+
+/**
+ * クエリ一覧からクエリパラメーターを生成する
+ * @param queryList クエリ一覧
+ */
+export const queryListToqueryString = (queryList: Query[]) => {
+  // クエリパラメーターを自動修正する
+  let parameter = '?';
+  for (const query of queryList) {
+    if (parameter !== '?') {
+      parameter += '&';
+    }
+    parameter += `${query.type.name}=${query.value}`;
+  }
+  return parameter;
+};

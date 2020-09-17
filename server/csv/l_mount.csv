@@ -1,2 +1,1 @@
-id,maker,name,product_number,wide_focal_length,telephoto_focal_length,wide_f_number,telephoto_f_number,wide_min_focus_distance,telephoto_min_focus_distance,max_photographing_magnification,filter_diameter,is_drip_proof,has_image_stabilization,is_inner_zoom,overall_diameter,overall_length,weight,price
-0,TAMRON,14-150mm F/3.5-5.8 Di III (Model C001),C001,28,300,3.5,5.8,500,500,0.53,52,0,0,0,63.5,80.4,285,65000
+maker,name,product_number,wide_focal_length,telephoto_focal_length,wide_f_number,telephoto_f_number,wide_min_focus_distance,telephoto_min_focus_distance,max_photographing_magnification,filter_diameter,is_drip_proof,has_image_stabilization,is_inner_zoom,overall_diameter,overall_length,weight,price

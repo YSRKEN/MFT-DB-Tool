@@ -12,7 +12,7 @@ const AddQueryForm: React.FC<{
   return (
     <Form>
       <Form.Row>
-        <Col xs="auto">
+        <Col xs="auto" className="mt-3">
           <Form.Control as="select" value={queryType}
             onChange={e => setQueryType(e.currentTarget.value)}>
             {QueryTypeList.map(q =>
@@ -23,11 +23,11 @@ const AddQueryForm: React.FC<{
         {BooleanQueryTypeList.includes(queryType)
           ? <></>
           : <>
-            <Col xs={2}>
+            <Col xs="auto" className="mt-3">
               <Form.Control value={queryValue} placeholder="数値を入力"
                 onChange={e => setQueryValue(e.currentTarget.value)} />
             </Col>
-            <Col xs="auto">
+            <Col xs="auto" className="mt-3">
               <Form.Control as="select" value={queryType} readOnly>
                 {QueryTypeList.map(q =>
                   <option key={q.name} value={q.name}>{q.suffixMessage}</option>
@@ -35,7 +35,7 @@ const AddQueryForm: React.FC<{
               </Form.Control>
             </Col>
           </>}
-        <Col xs="auto">
+        <Col xs="auto" className="mt-3">
           <Button onClick={addQuery}>条件を追加</Button>
         </Col>
       </Form.Row>

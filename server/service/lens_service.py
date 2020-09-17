@@ -27,7 +27,8 @@ class LensService:
             'overall_diameter REAL,'                  # レンズ全体の直径(mm)
             'overall_length REAL,'                    # レンズ全体の全長(mm)
             'weight REAL,'                            # 重量(g)
-            'price INTEGER)')                         # 定価(円)
+            'price INTEGER,'                          # 定価(円)
+            'mount TEXT)')                            # レンズマウント
 
     def get_data_count(self) -> int:
         result = self.database.select('SELECT COUNT(*) FROM lens')
@@ -40,7 +41,7 @@ class LensService:
                                       'wide_min_focus_distance,telephoto_min_focus_distance,'
                                       'max_photographing_magnification, filter_diameter, '
                                       'is_drip_proof, has_image_stabilization, is_inner_zoom, overall_diameter, '
-                                      'overall_length, weight, price FROM lens ORDER BY id')
+                                      'overall_length, weight, price, mount FROM lens ORDER BY id')
         return [Lens.from_dict(x) for x in result]
 
     def save(self, lens: Lens) -> None:
