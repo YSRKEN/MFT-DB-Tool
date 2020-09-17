@@ -8,6 +8,7 @@ DIR = 'csv'
 def load_csv_lens(name: str):
     with open(f'{DIR}/{name}') as f:
         reader = csv.reader(f)
+        # headerを読み捨て。ヘッダが無いと何故かレンズが1つ減ったりする
         next(reader)
         return [
             Lens(
