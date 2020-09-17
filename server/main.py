@@ -2,7 +2,7 @@ from constant import DATABASE_PATH
 from service.i_database_service import IDataBaseService
 from service.lens_service import Lens, LensService
 from service.scraping_service import ScrapingService, get_p_lens_list, get_o_lens_list, get_s_lens_list, \
-    get_t_lens_list, get_other_lens_list, get_p_l_lens_list, get_s_l_lens_list, get_l_l_lens_list
+    get_other_lens_list, get_p_l_lens_list, get_s_l_lens_list, get_l_l_lens_list
 from service.sqlite_database_service import SqliteDataBaseService
 
 
@@ -32,11 +32,6 @@ def main():
     for lens in s_l_lens_list:
         print(lens)
 
-    # タムロン製レンズについての情報を収集する
-    t_lens_list = get_t_lens_list()
-    for lens in t_lens_list:
-        print(lens)
-
     # ライカ製レンズについての情報を収集する
     l_l_lens_list = get_l_l_lens_list(scraping)
     for lens in l_l_lens_list:
@@ -59,8 +54,6 @@ def main():
     for lens in s_lens_list:
         lens_service.save(lens)
     for lens in s_l_lens_list:
-        lens_service.save(lens)
-    for lens in t_lens_list:
         lens_service.save(lens)
     for lens in l_l_lens_list:
         lens_service.save(lens)
