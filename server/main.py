@@ -2,7 +2,7 @@ from constant import DATABASE_PATH
 from service.i_database_service import IDataBaseService
 from service.lens_service import Lens, LensService
 from service.scraping_service import ScrapingService, get_p_lens_list, get_o_lens_list, get_s_lens_list, \
-    get_other_lens_list, get_p_l_lens_list, get_s_l_lens_list, get_l_l_lens_list
+    get_other_lens_list, get_p_l_lens_list, get_s_l_lens_list, get_l_l_lens_list, get_la_lens_list
 from service.sqlite_database_service import SqliteDataBaseService
 
 
@@ -37,6 +37,11 @@ def main():
     for lens in l_l_lens_list:
         print(lens)
 
+    # LAOWA製レンズについての情報を収集する
+    la_lens_list = get_la_lens_list(scraping)
+    for lens in la_lens_list:
+        print(lens)
+
     # その他レンズについての情報を収集する
     other_lens_list = get_other_lens_list()
     for lens in other_lens_list:
@@ -57,6 +62,8 @@ def main():
         lens_service.save(lens)
     for lens in l_l_lens_list:
         lens_service.save(lens)
+    for lens in la_lens_list:
+        lens_service.save(lens)
     for lens in other_lens_list:
         lens_service.save(lens)
     with open('lens_data.json', 'w') as f:
@@ -66,7 +73,7 @@ def main():
 def main2():
     database: IDataBaseService = SqliteDataBaseService(DATABASE_PATH)
     scraping = ScrapingService(database)
-    lens_list = get_l_l_lens_list(scraping)
+    lens_list = get_la_lens_list(scraping)
     for lens in lens_list:
         print(lens)
 
