@@ -75,6 +75,7 @@ const LensTable: React.FC<{ lensList: Lens[] }> = ({ lensList }) => {
                   {lensListA[lensIndex].is_inner_zoom
                   && lensListA[lensIndex].wide_focal_length !== lensListA[lensIndex].telephoto_focal_length
                   ? 'インナーズーム　' : ''}</li>
+                <li>製品URL：<a href={lensListA[lensIndex].url} rel="noopener noreferrer" target="_blank">{lensListA[lensIndex].url}</a></li>
               </ul>
             </td>
         </tr>
