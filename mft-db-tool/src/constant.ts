@@ -63,6 +63,8 @@ export interface Lens {
   price: number
   // レンズマウント
   mount: string
+  // 製品URL
+  url: string
 }
 
 /** クエリタイプの一覧 */
