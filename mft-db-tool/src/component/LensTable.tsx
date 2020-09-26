@@ -2,6 +2,83 @@ import React, { useState } from "react";
 import { Lens } from "constant";
 import { Table, Button } from "react-bootstrap";
 
+const LensRecord: React.FC<{
+  lens: Lens,
+  onClickDetailButton: (s: string) => void
+}> = ({ lens, onClickDetailButton }) => (
+  <tr>
+    <td className="align-middle text-nowrap">{lens.maker}</td>
+    <td className="align-middle">{lens.name}</td>
+    <td className="align-middle text-nowrap"><Button size="sm" onClick={() => onClickDetailButton(lens.name)}>詳細</Button></td>
+  </tr>
+);
+
+const LensRecordDetail: React.FC<{ lens: Lens }> = ({ lens }) => {
+  // 換算焦点距離
+  const focalLength = lens.wide_focal_length === lens.telephoto_focal_length
+    ? `${lens.wide_focal_length}mm`
+    : `${lens.wide_focal_length}mm～${lens.telephoto_focal_length}mm`;
+
+  // F値
+  const fNumber = lens.wide_f_number === lens.telephoto_f_number
+    ? `F${lens.wide_f_number}`
+    : `F${lens.wide_f_number}～F${lens.telephoto_f_number}`;
+
+  // 最短撮影距離
+  const minFocusDistance = lens.wide_min_focus_distance === 0
+    ? '不明'
+    : lens.wide_min_focus_distance === lens.telephoto_min_focus_distance
+      ? `${lens.wide_min_focus_distance / 1000}m`
+      : `${lens.wide_min_focus_distance / 1000}m～${lens.telephoto_min_focus_distance / 1000}m`;
+
+  // 換算最大撮影倍率
+  const maxPhotographingMagnification = lens.max_photographing_magnification !== 0
+    ? `${lens.max_photographing_magnification}倍`
+    : '不明';
+
+  // フィルター径
+  const filterDiameter = lens.filter_diameter >= 1
+    ? `${lens.filter_diameter}mm`
+    : '装着不可';
+
+  // その他属性
+  const options: string[] = [];
+  if (lens.is_drip_proof) {
+    options.push('防塵防滴');
+  }
+  if (lens.has_image_stabilization) {
+    options.push('レンズ内手ブレ補正');
+  }
+  if (lens.is_inner_zoom && lens.wide_focal_length !== lens.telephoto_focal_length) {
+    options.push('インナーズーム');
+  }
+
+  // 価格
+  const price = lens.price === 0 ? '不明' : `${lens.price}円`;
+
+  return <tr>
+    <td colSpan={4}>
+      <ul>
+        {lens.product_number !== '' ? <li>品番：{lens.product_number}</li> : <></>}
+        <li>換算焦点距離：{focalLength}</li>
+        <li>F値：{fNumber}</li>
+        <li>最短撮影距離：{minFocusDistance}</li>
+        <li>換算最大撮影倍率：{maxPhotographingMagnification}</li>
+        <li>フィルター径：{filterDiameter}</li>
+        <li>最大径×全長：{lens.overall_diameter}mm×{lens.overall_length}mm</li>
+        <li>質量：{lens.weight}g</li>
+        <li>レンズマウント：{lens.mount}</li>
+        {options.length > 0
+          ? <li>その他属性：{options.join('、')}</li>
+          : <></>
+        }
+        <li>希望小売価格(税抜)：{price}</li>
+        <li>製品URL：<a href={lens.url} rel="noopener noreferrer" target="_blank">{lens.url}</a></li>
+      </ul>
+    </td>
+  </tr>;
+};
+
 const LensTable: React.FC<{ lensList: Lens[] }> = ({ lensList }) => {
   // 選択されているレンズ名
   const [selectedLensName, setSelectedLensName] = useState('');
@@ -39,59 +116,11 @@ const LensTable: React.FC<{ lensList: Lens[] }> = ({ lensList }) => {
       </tr>
     </thead>
     <tbody>
-      {lensListA.map(lens => <tr key={lens.id}>
-        <td className="align-middle text-nowrap">{lens.maker}</td>
-        <td className="align-middle">{lens.name}</td>
-        <td className="align-middle text-nowrap"><Button size="sm" onClick={() => onClickDetailButton(lens.name)}>詳細</Button></td>
-      </tr>)}
+      {lensListA.map(lens => <LensRecord lens={lens} key={lens.id} onClickDetailButton={onClickDetailButton} />)}
       {selectedLensName !== '' && lensIndex >= 0
-        ? <tr>
-          <td colSpan={4}>
-            <ul>
-              <li>品番：{lensListA[lensIndex].product_number}</li>
-              <li>換算焦点距離：{lensListA[lensIndex].wide_focal_length === lensListA[lensIndex].telephoto_focal_length
-                ? `${lensListA[lensIndex].wide_focal_length}mm`
-                : `${lensListA[lensIndex].wide_focal_length}mm～${lensListA[lensIndex].telephoto_focal_length}mm`}</li>
-              <li>F値：{lensListA[lensIndex].wide_f_number === lensListA[lensIndex].telephoto_f_number
-                ? `F${lensListA[lensIndex].wide_f_number}`
-                : `F${lensListA[lensIndex].wide_f_number}～F${lensListA[lensIndex].telephoto_f_number}`}</li>
-              <li>最短撮影距離：{lensListA[lensIndex].wide_min_focus_distance === lensListA[lensIndex].telephoto_min_focus_distance
-                ? `${lensListA[lensIndex].wide_min_focus_distance / 1000}m`
-                : `${lensListA[lensIndex].wide_min_focus_distance / 1000}m～${lensListA[lensIndex].telephoto_min_focus_distance / 1000}m`}</li>
-              <li>換算最大撮影倍率：{
-                lensListA[lensIndex].max_photographing_magnification !== 0
-                  ? `${lensListA[lensIndex].max_photographing_magnification}倍`
-                  : '不明'
-              }</li>
-              <li>フィルター径：{
-                lensListA[lensIndex].filter_diameter >= 1
-                  ? `${lensListA[lensIndex].filter_diameter}mm`
-                  : '装着不可'
-              }</li>
-              <li>最大径×全長：{lensListA[lensIndex].overall_diameter}mm×{lensListA[lensIndex].overall_length}mm</li>
-              <li>質量：{lensListA[lensIndex].weight}g</li>
-              <li>レンズマウント：{lensListA[lensIndex].mount}</li>
-              {
-                lensListA[lensIndex].is_drip_proof || lensListA[lensIndex].has_image_stabilization || lensListA[lensIndex].is_inner_zoom
-                  ? <li>その他属性：
-                  {lensListA[lensIndex].is_drip_proof ? '防塵防滴　' : ''}
-                    {lensListA[lensIndex].has_image_stabilization ? 'レンズ内手ブレ補正　' : ''}
-                    {lensListA[lensIndex].is_inner_zoom
-                      && lensListA[lensIndex].wide_focal_length !== lensListA[lensIndex].telephoto_focal_length
-                      ? 'インナーズーム　' : ''}</li>
-                  : <></>
-              }
-              <li>希望小売価格(税抜)：{lensListA[lensIndex].price === 0 ? '不明' : `${lensListA[lensIndex].price}円`}</li>
-              <li>製品URL：<a href={lensListA[lensIndex].url} rel="noopener noreferrer" target="_blank">{lensListA[lensIndex].url}</a></li>
-            </ul>
-          </td>
-        </tr>
+        ? <LensRecordDetail lens={lensListA[lensIndex]} />
         : <></>}
-      {lensListB.map(lens => <tr key={lens.id}>
-        <td>{lens.maker}</td>
-        <td>{lens.name}</td>
-        <td><Button size="sm" className="text-nowrap" onClick={() => onClickDetailButton(lens.name)}>詳細</Button></td>
-      </tr>)}
+      {lensListB.map(lens => <LensRecord lens={lens} key={lens.id} onClickDetailButton={onClickDetailButton} />)}
     </tbody>
   </Table>);
 };
