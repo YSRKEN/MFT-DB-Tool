@@ -64,5 +64,22 @@ class LensService:
             temp3 = ','.join(temp1)
             self.database.query(f'UPDATE lens SET {temp3} WHERE id={lens.id}', temp2)
 
+    def save_all(self, lens_list: List[Lens]) -> None:
+        query_list = []
+        parameter_list = []
+        lens_id = 1
+        for lens in lens_list:
+            lens_items: List[Tuple[str, any]] = lens.to_dict().items()
+            temp1: List[str] = [x[0] for x in lens_items]
+            temp2: List[any] = [x[1] for x in lens_items]
+            index = temp1.index('id')
+            temp2[index] = lens_id
+            temp3 = ','.join(temp1)
+            temp4 = ','.join(['?' for _ in temp1])
+            query_list.append(f'INSERT INTO lens ({temp3}) VALUES ({temp4})')
+            lens_id += 1
+            parameter_list.append(temp2)
+        self.database.many_query(query_list, parameter_list)
+
     def delete_all(self) -> None:
         self.database.query('DELETE FROM lens')
