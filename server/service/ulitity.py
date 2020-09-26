@@ -30,5 +30,6 @@ def load_csv_lens(path: str, lens_mount: str) -> List[Lens]:
         取得結果
     """
     df = pandas.read_csv(path, dtype={'product_number': str})
+    df = df.fillna({'product_number': ''})
     df['mount'] = lens_mount
     return [Lens.from_dict(x) for x in df.to_dict(orient='records')]

@@ -1,3 +1,4 @@
+import time
 from decimal import Decimal
 from typing import List, MutableMapping, Optional, Dict, Tuple
 
@@ -51,6 +52,7 @@ class ScrapingService:
         cache_data = self.database.select('SELECT text from page_cache WHERE url=?', (url,))
         if len(cache_data) == 0:
             temp: HTML = self.session.get(url).html
+            time.sleep(1)
             print(f'caching... [{url}]')
             self.database.query('INSERT INTO page_cache (url, text) VALUES (?, ?)',
                                 (url, temp.raw_html.decode(temp.encoding)))
@@ -160,6 +162,7 @@ def dict_to_lens_for_p(record: Dict[str, str]) -> Lens:
         weight=weight,
         price=price,
         mount='マイクロフォーサーズ',
+        url=record['URL'],
     )
 
 
@@ -184,6 +187,7 @@ def get_p_lens_list(scraping: ScrapingService) -> List[Lens]:
         if 'LUMIX G' not in table_element.full_text:
             continue
         df['レンズ名'] = [x.text for x in table_element.find_all('th p')]
+        df['URL'] = ['https://panasonic.jp' + x.attrs['href'] for x in table_element.find_all('th a')]
         for tr_element in table_element.find_all('tbody > tr'):
             key = tr_element.find('th').text
             value = [x.text for x in tr_element.find_all('td')]
@@ -295,6 +299,7 @@ def dict_to_lens_for_p_l(record: Dict[str, str]) -> Lens:
         weight=weight,
         price=price,
         mount='ライカL',
+        url=record['URL'],
     )
 
 
@@ -319,6 +324,7 @@ def get_p_l_lens_list(scraping: ScrapingService) -> List[Lens]:
         if 'LUMIX S' not in table_element.full_text:
             continue
         df['レンズ名'] = [x.text for x in table_element.find_all('th p')]
+        df['URL'] = ['https://panasonic.jp' + x.attrs['href'] for x in table_element.find_all('th a')]
         for tr_element in table_element.find_all('tbody > tr'):
             key = tr_element.find('th').text
             value = [x.text for x in tr_element.find_all('td')]
@@ -429,7 +435,10 @@ def dict_to_lens_for_o(record: Dict[str, str], record2: Dict[str, str]) -> Lens:
     is_inner_zoom = False
     if wide_focal_length == telephoto_focal_length:
         is_inner_zoom = True
-    elif record['品番'] in ['7-14_28pro', '40-150_28pro']:
+    elif record['レンズ名'] in [
+        'M.ZUIKO DIGITAL ED 7-14mm F2.8 PRO',
+        'M.ZUIKO DIGITAL ED 40-150mm F2.8 PRO'
+    ]:
         is_inner_zoom = True
 
     # 質量
@@ -443,7 +452,7 @@ def dict_to_lens_for_o(record: Dict[str, str], record2: Dict[str, str]) -> Lens:
         id=0,
         maker='OLYMPUS',
         name=record['レンズ名'],
-        product_number=record['品番'],
+        product_number='',
         wide_focal_length=wide_focal_length,
         telephoto_focal_length=telephoto_focal_length,
         wide_f_number=wide_f_number,
@@ -460,6 +469,7 @@ def dict_to_lens_for_o(record: Dict[str, str], record2: Dict[str, str]) -> Lens:
         weight=weight,
         price=price,
         mount='マイクロフォーサーズ',
+        url=record2['URL'],
     )
 
 
@@ -498,11 +508,12 @@ def get_o_lens_list(scraping: ScrapingService) -> List[Lens]:
                 continue
             temp_dict[th_element.text] = td_element.text
         temp_dict['レンズ名'] = lens_name
-        temp_dict['品番'] = lens_product_number
 
         index_url = f'https://www.olympus-imaging.jp/product/dslr/mlens/{lens_product_number}/index.html'
         page = scraping.get_page(index_url)
-        temp_dict2: Dict[str, str] = {}
+        temp_dict2: Dict[str, str] = {
+            'URL': index_url
+        }
         for th_element, td_element in zip(page.find_all('th'), page.find_all('td')):
             if th_element is None or td_element is None:
                 continue
@@ -593,7 +604,7 @@ def dict_to_lens_for_s(record: Dict[str, str]) -> Lens:
         id=0,
         maker='SIGMA',
         name=record['レンズ名'],
-        product_number=record['品番'],
+        product_number='',
         wide_focal_length=wide_focal_length,
         telephoto_focal_length=telephoto_focal_length,
         wide_f_number=wide_f_number,
@@ -610,6 +621,7 @@ def dict_to_lens_for_s(record: Dict[str, str]) -> Lens:
         weight=weight,
         price=price,
         mount='マイクロフォーサーズ',
+        url=record['URL'],
     )
 
 
@@ -653,7 +665,7 @@ def get_s_lens_list(scraping: ScrapingService) -> List[Lens]:
             elif len(td_elements) == 2:
                 temp_dict[th_text + ' ' + td_elements[0].text] = td_elements[1].text
         temp_dict['レンズ名'] = lens_name
-        temp_dict['品番'] = lens_link.split('/')[-2]
+        temp_dict['URL'] = lens_link
 
         # 詳細な情報を取得する
         output.append(dict_to_lens_for_s(temp_dict))
@@ -749,7 +761,7 @@ def dict_to_lens_for_s_l(record: Dict[str, str]) -> Lens:
         id=0,
         maker='SIGMA',
         name=record['レンズ名'],
-        product_number=record['品番'],
+        product_number='',
         wide_focal_length=wide_focal_length,
         telephoto_focal_length=telephoto_focal_length,
         wide_f_number=wide_f_number,
@@ -766,6 +778,7 @@ def dict_to_lens_for_s_l(record: Dict[str, str]) -> Lens:
         weight=weight,
         price=price,
         mount='ライカL',
+        url=record['URL'],
     )
 
 
@@ -809,7 +822,7 @@ def get_s_l_lens_list(scraping: ScrapingService) -> List[Lens]:
             elif len(td_elements) == 2:
                 temp_dict[th_text + ' ' + td_elements[0].text] = td_elements[1].text
         temp_dict['レンズ名'] = lens_name
-        temp_dict['品番'] = lens_link.split('/')[-2]
+        temp_dict['URL'] = lens_link
 
         page = scraping.get_page(lens_link + 'features/')
         if '防塵防滴' in page.full_text:
@@ -950,7 +963,8 @@ def dict_to_lens_for_l_l(record: Dict[str, str]) -> Lens:
         overall_diameter=overall_diameter,
         overall_length=overall_length,
         weight=weight,
-        mount='ライカL'
+        mount='ライカL',
+        url=record['URL'],
     )
 
 
@@ -993,7 +1007,7 @@ def get_l_l_lens_list(scraping: ScrapingService) -> List[Lens]:
     output: List[Lens] = []
     for lens_name, lens_url in lens_list:
         page = scraping.get_page(lens_url)
-        temp: Dict[str, str] = {'レンズ名': lens_name}
+        temp: Dict[str, str] = {'レンズ名': lens_name, 'URL': lens_url}
         section_element = page.find('section.tech-specs')
         if section_element is not None:
             for tr_element in section_element.find_all('tr'):
