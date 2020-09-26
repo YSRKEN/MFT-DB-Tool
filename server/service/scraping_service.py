@@ -747,7 +747,8 @@ def dict_to_lens_for_s_l(record: Dict[str, str]) -> Lens:
     has_image_stabilization = 'OS' in record['レンズ名']
 
     # インナーズーム
-    is_inner_zoom = wide_focal_length == telephoto_focal_length
+    # ※70mm F2.8 DG MACROは全群繰り出し式フォーカスなのでインナーとは言えない
+    is_inner_zoom = wide_focal_length == telephoto_focal_length and '70mm F2.8 DG MACRO' not in record['レンズ名']
 
     # 質量
     result = regex(record['質量 Lマウント'], r'([\d,]+)g')
