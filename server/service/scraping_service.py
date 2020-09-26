@@ -3,6 +3,7 @@ from decimal import Decimal
 from typing import List, MutableMapping, Optional, Dict, Tuple
 
 from pandas import DataFrame
+from requests import Response
 from requests_html import HTMLSession, BaseParser, Element, HTML
 
 from constant import Lens
@@ -48,15 +49,19 @@ class ScrapingService:
         self.database = database
         self.database.query('CREATE TABLE IF NOT EXISTS page_cache (url TEXT PRIMARY KEY, text TEXT)')
 
-    def get_page(self, url: str) -> DomObject:
+    def get_page(self, url: str, encoding='', cache=True) -> DomObject:
         cache_data = self.database.select('SELECT text from page_cache WHERE url=?', (url,))
-        if len(cache_data) == 0:
-            temp: HTML = self.session.get(url).html
+        if len(cache_data) == 0 or not cache:
+            temp: Response = self.session.get(url)
+            if encoding != '':
+                temp.encoding = encoding
+            temp2: HTML = self.session.get(url).html
             time.sleep(1)
-            print(f'caching... [{url}]')
-            self.database.query('INSERT INTO page_cache (url, text) VALUES (?, ?)',
-                                (url, temp.raw_html.decode(temp.encoding)))
-            return DomObject(temp)
+            if cache:
+                print(f'caching... [{url}]')
+                self.database.query('INSERT INTO page_cache (url, text) VALUES (?, ?)',
+                                    (url, temp2.raw_html.decode(temp2.encoding)))
+            return DomObject(temp2)
         else:
             return DomObject(HTML(html=cache_data[0]['text']))
 
@@ -1020,6 +1025,52 @@ def get_l_l_lens_list(scraping: ScrapingService) -> List[Lens]:
     return output
 
 
+def get_la_lens_list(scraping: ScrapingService) -> List[Lens]:
+    """LAOWA製レンズの情報を取得する
+
+    Parameters
+    ----------
+    scraping: ScrapingService
+        データスクレイピング用クラス
+
+    Returns
+    -------
+        スクレイピング後のレンズデータ一覧
+    """
+
+    # レンズのURL一覧を取得する
+    lens_list: List[Tuple[str, str]] = []
+    page = scraping.get_page('https://www.laowa.jp/cat1/')
+    for div_element in page.find_all('div.product3'):
+        h3_element = div_element.find('h3')
+        if h3_element is None:
+            continue
+        a_element = div_element.find('a')
+        if a_element is None:
+            continue
+        lens_name = h3_element.text
+        lens_url = a_element.attrs['href']
+        lens_list.append((lens_name, lens_url))
+
+    # レンズの情報を取得する
+    output: List[Lens] = []
+    for lens_name, lens_url in lens_list:
+        page = scraping.get_page(lens_url)
+        temp: Dict[str, str] = {'レンズ名': lens_name, 'URL': lens_url}
+        section_element = page.find('div.productTable')
+        if section_element is not None:
+            for tr_element in section_element.find_all('tr'):
+                td_elements = tr_element.find_all('td')
+                if len(td_elements) < 2:
+                    continue
+                temp[td_elements[0].text] = td_elements[1].text
+            lens_data = dict_to_lens_for_la(temp)
+            if lens_data.mount == '':
+                continue
+            output.append(lens_data)
+    return output
+
+
 def dict_to_lens_for_la(record: Dict[str, str]) -> Lens:
     """辞書型をレンズデータに変換する
 
@@ -1155,8 +1206,45 @@ def dict_to_lens_for_la(record: Dict[str, str]) -> Lens:
     )
 
 
-def get_la_lens_list(scraping: ScrapingService) -> List[Lens]:
-    """LAOWA製レンズの情報を取得する
+def dict_to_lens_for_cosina(record: Dict[str, str]) -> Lens:
+    """辞書型をレンズデータに変換する
+
+    Parameters
+    ----------
+    record: Dict[str, str]
+        辞書型
+
+    Returns
+    -------
+        レンズデータ
+    """
+
+    return Lens(
+        maker='Cosina',
+        name=record['レンズ名'],
+        product_number='',
+        wide_focal_length=0,
+        telephoto_focal_length=0,
+        wide_f_number=0,
+        telephoto_f_number=0,
+        wide_min_focus_distance=0,
+        telephoto_min_focus_distance=0,
+        max_photographing_magnification=0,
+        filter_diameter=0,
+        is_drip_proof=False,
+        has_image_stabilization=False,
+        is_inner_zoom=False,
+        overall_diameter=0,
+        overall_length=0,
+        weight=0,
+        price=0,
+        mount='',
+        url=record['URL'],
+    )
+
+
+def get_cosina_lens_list(scraping: ScrapingService) -> List[Lens]:
+    """Cosina製レンズの情報を取得する
 
     Parameters
     ----------
@@ -1170,34 +1258,31 @@ def get_la_lens_list(scraping: ScrapingService) -> List[Lens]:
 
     # レンズのURL一覧を取得する
     lens_list: List[Tuple[str, str]] = []
-    page = scraping.get_page('https://www.laowa.jp/cat1/')
-    for div_element in page.find_all('div.product3'):
-        h3_element = div_element.find('h3')
-        if h3_element is None:
-            continue
-        a_element = div_element.find('a')
-        if a_element is None:
-            continue
-        lens_name = h3_element.text
-        lens_url = a_element.attrs['href']
-        lens_list.append((lens_name, lens_url))
+    page = scraping.get_page('http://www.cosina.co.jp/seihin/voigtlander/mft-mount/index.html',
+                             encoding='cp932', cache=False)
+    for a_element in page.find_all('td > a'):
+        lens_name = a_element.find('img').attrs['alt']
+        lens_url = 'http://www.cosina.co.jp/seihin/voigtlander/mft-mount/' + a_element.attrs['href']
+        if 'mm' in lens_name and 'mft' in a_element.attrs['href']:
+            lens_list.append((lens_name, lens_url))
 
     # レンズの情報を取得する
     output: List[Lens] = []
     for lens_name, lens_url in lens_list:
-        page = scraping.get_page(lens_url)
+        page = scraping.get_page(lens_url, encoding='cp932', cache=False)
         temp: Dict[str, str] = {'レンズ名': lens_name, 'URL': lens_url}
-        section_element = page.find('div.productTable')
-        if section_element is not None:
-            for tr_element in section_element.find_all('tr'):
-                td_elements = tr_element.find_all('td')
-                if len(td_elements) < 2:
-                    continue
-                temp[td_elements[0].text] = td_elements[1].text
-            lens_data = dict_to_lens_for_la(temp)
-            if lens_data.mount == '':
+        for tr_element in page.find_all('tr'):
+            td_elements = tr_element.find_all('td')
+            if len(td_elements) < 2:
                 continue
-            output.append(lens_data)
+            if td_elements[0].text == '' or td_elements[1].text == '':
+                continue
+            temp[td_elements[0].text] = td_elements[1].text
+        print(temp)
+        lens_data = dict_to_lens_for_cosina(temp)
+        if lens_data.mount == '':
+            continue
+        output.append(lens_data)
     return output
 
 
