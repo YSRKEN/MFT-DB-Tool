@@ -35,7 +35,6 @@ const LensTable: React.FC<{ lensList: Lens[] }> = ({ lensList }) => {
       <tr>
         <th>メーカー</th>
         <th>レンズ名</th>
-        <th>価格(税抜)</th>
         <th>操作</th>
       </tr>
     </thead>
@@ -43,7 +42,6 @@ const LensTable: React.FC<{ lensList: Lens[] }> = ({ lensList }) => {
       {lensListA.map(lens => <tr key={lens.id}>
         <td className="align-middle text-nowrap">{lens.maker}</td>
         <td className="align-middle">{lens.name}</td>
-        <td className="align-middle text-nowrap">{lens.price}</td>
         <td className="align-middle text-nowrap"><Button size="sm" onClick={() => onClickDetailButton(lens.name)}>詳細</Button></td>
       </tr>)}
       {selectedLensName !== '' && lensIndex >= 0
@@ -75,6 +73,7 @@ const LensTable: React.FC<{ lensList: Lens[] }> = ({ lensList }) => {
                   {lensListA[lensIndex].is_inner_zoom
                   && lensListA[lensIndex].wide_focal_length !== lensListA[lensIndex].telephoto_focal_length
                   ? 'インナーズーム　' : ''}</li>
+                <li>希望小売価格(税抜)：{lensListA[lensIndex].price === 0 ? '―' : lensListA[lensIndex].price}円</li>
                 <li>製品URL：<a href={lensListA[lensIndex].url} rel="noopener noreferrer" target="_blank">{lensListA[lensIndex].url}</a></li>
               </ul>
             </td>
