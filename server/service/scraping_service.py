@@ -1219,28 +1219,70 @@ def dict_to_lens_for_cosina(record: Dict[str, str]) -> Lens:
         レンズデータ
     """
 
-    return Lens(
-        maker='Cosina',
-        name=record['レンズ名'],
-        product_number='',
-        wide_focal_length=0,
-        telephoto_focal_length=0,
-        wide_f_number=0,
-        telephoto_f_number=0,
-        wide_min_focus_distance=0,
-        telephoto_min_focus_distance=0,
-        max_photographing_magnification=0,
-        filter_diameter=0,
-        is_drip_proof=False,
-        has_image_stabilization=False,
-        is_inner_zoom=False,
-        overall_diameter=0,
-        overall_length=0,
-        weight=0,
-        price=0,
-        mount='',
-        url=record['URL'],
-    )
+    lens_data = Lens(maker='Cosina', url=record['URL'], mount='マイクロフォーサーズ')
+
+    # レンズ名
+    if record['レンズ名'] == 'mft60mm':
+        lens_data.name = 'Voigtlander NOKTON 60mm F0.95'
+    elif record['レンズ名'] == '25mm Type2':
+        lens_data.name = 'Voigtlander NOKTON 25mm F0.95 TypeII'
+    else:
+        lens_data.name = 'Voigtlander NOKTON ' + record['レンズ名']
+
+    # 35mm判換算焦点距離
+    result = regex(record['焦点距離'], r'(\d+\.?\d*)mm')
+    if len(result) == 1:
+        lens_data.wide_focal_length = round(float(result[0]) * 2)
+        lens_data.telephoto_focal_length = lens_data.wide_focal_length
+    else:
+        raise Exception('焦点距離がパースできません')
+
+    # F値
+    result = regex(lens_data.name, r'F(\d+\.?\d*)')
+    if len(result) == 1:
+        lens_data.wide_f_number = float(result[0])
+        lens_data.telephoto_f_number = lens_data.wide_f_number
+    else:
+        raise Exception('F値がパースできません')
+
+    # 最短撮影距離
+    result = regex(record['最短撮影距離'], r'(\d+\.?\d*)m')
+    if len(result) == 1:
+        lens_data.wide_min_focus_distance = float(result[0]) * 1000
+        lens_data.telephoto_min_focus_distance = lens_data.wide_min_focus_distance
+    else:
+        raise Exception('最短撮影距離がパースできません')
+
+    # 最大撮影倍率
+    result = regex(record['最大撮影倍率'], r'1(:|：)(\d+\.?\d*)')
+    if len(result) >= 2:
+        lens_data.max_photographing_magnification = round(1.0 / float(result[1]) * 2 * 100) / 100
+    else:
+        raise Exception('最大撮影倍率がパースできません')
+
+    # フィルターサイズ
+    result = regex(record['フィルターサイズ'], r'(\d+\.?\d*)mm')
+    if len(result) == 1:
+        lens_data.filter_diameter = float(result[0])
+    else:
+        raise Exception('フィルターサイズがパースできません')
+
+    # インナーズームか？
+    lens_data.is_inner_zoom = lens_data.wide_focal_length == lens_data.telephoto_focal_length
+
+    # 最大径×全長
+    result = regex(record['最大径×全長'], r'(\d+\.?\d*)[^\d]*(\d+\.?\d*)mm')
+    lens_data.overall_diameter = float(result[0])
+    lens_data.overall_length = float(result[1])
+
+    # 質量
+    result = regex(record['重量'], r'(\d+)g')
+    if len(result) == 1:
+        lens_data.weight = float(result[0])
+    else:
+        raise Exception('質量がパースできません')
+
+    return lens_data
 
 
 def get_cosina_lens_list(scraping: ScrapingService) -> List[Lens]:
@@ -1278,7 +1320,6 @@ def get_cosina_lens_list(scraping: ScrapingService) -> List[Lens]:
             if td_elements[0].text == '' or td_elements[1].text == '':
                 continue
             temp[td_elements[0].text] = td_elements[1].text
-        print(temp)
         lens_data = dict_to_lens_for_cosina(temp)
         if lens_data.mount == '':
             continue

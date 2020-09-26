@@ -82,7 +82,6 @@ const LensTable: React.FC<{ lensList: Lens[] }> = ({ lensList }) => {
       {lensListB.map(lens => <tr key={lens.id}>
         <td>{lens.maker}</td>
         <td>{lens.name}</td>
-        <td>{lens.price}</td>
         <td><Button size="sm" className="text-nowrap" onClick={() => onClickDetailButton(lens.name)}>詳細</Button></td>
       </tr>)}
     </tbody>
