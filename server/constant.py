@@ -28,3 +28,4 @@ class Lens:
     weight: float = 0
     price: int = 0
     mount: str = ''
+    url: str = ''
