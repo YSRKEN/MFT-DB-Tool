@@ -66,11 +66,17 @@ def main():
 def main2():
     database: IDataBaseService = SqliteDataBaseService(DATABASE_PATH)
     scraping = ScrapingService(database)
-    lens_list = get_cosina_lens_list(scraping)
+    scraping.clear_cache()
+    lens_list = get_la_lens_list(scraping)
     for lens in lens_list:
         print(lens)
 
 
 if __name__ == '__main__':
+    """
+    database: IDataBaseService = SqliteDataBaseService(DATABASE_PATH)
+    scraping = ScrapingService(database)
+    scraping.clear_cache()
+    """
     main()
     # main2()

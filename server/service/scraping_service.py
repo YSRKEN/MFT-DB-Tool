@@ -65,6 +65,9 @@ class ScrapingService:
         else:
             return DomObject(HTML(html=cache_data[0]['text']))
 
+    def clear_cache(self):
+        self.database.query('DELETE FROM page_cache')
+
 
 def dict_to_lens_for_p(record: Dict[str, str]) -> Lens:
     """辞書型をレンズデータに変換する
