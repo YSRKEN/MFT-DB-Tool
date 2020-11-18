@@ -365,14 +365,20 @@ def dict_to_lens_for_o(record: Dict[str, str], record2: Dict[str, str]) -> Lens:
     """
 
     # 35mm判換算焦点距離
+    if '焦点距離\n35mm判換算' in record:
+        record['焦点距離'] = record['焦点距離\n35mm判換算']
     result1 = regex(record['焦点距離'], r'換算 *(\d+) *- *(\d+)mm相当')
     result2 = regex(record['焦点距離'], r'換算 *(\d+)mm相当')
+    result3 = regex(record['焦点距離'], r'(\d+) *- *(\d+)mm相当')
     if len(result1) > 0:
         wide_focal_length = int(result1[0])
         telephoto_focal_length = int(result1[1])
-    else:
+    elif len(result2) > 0:
         wide_focal_length = int(result2[0])
         telephoto_focal_length = wide_focal_length
+    else:
+        wide_focal_length = int(result3[0])
+        telephoto_focal_length = int(result3[1])
 
     # F値
     result1 = regex(record['レンズ名'], r'F(\d+\.?\d*)-(\d+\.?\d*)')
@@ -1229,6 +1235,8 @@ def dict_to_lens_for_cosina(record: Dict[str, str]) -> Lens:
         lens_data.name = 'Voigtlander NOKTON 60mm F0.95'
     elif record['レンズ名'] == '25mm Type2':
         lens_data.name = 'Voigtlander NOKTON 25mm F0.95 TypeII'
+    elif record['レンズ名'] == '29mm':
+        lens_data.name = 'Voigtlander SUPER NOKTON 29mm F0.8'
     else:
         lens_data.name = 'Voigtlander NOKTON ' + record['レンズ名']
 
