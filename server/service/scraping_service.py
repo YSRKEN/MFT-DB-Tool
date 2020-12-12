@@ -187,7 +187,7 @@ def get_p_lens_list(scraping: ScrapingService) -> List[Lens]:
         スクレイピング後のレンズデータ一覧
     """
     # 情報ページを開く
-    page = scraping.get_page('https://panasonic.jp/dc/comparison.html')
+    page = scraping.get_page('https://panasonic.jp/dc/comparison.html', cache=False)
 
     # tableタグからデータを収集する
     df = DataFrame()
@@ -324,7 +324,7 @@ def get_p_l_lens_list(scraping: ScrapingService) -> List[Lens]:
         スクレイピング後のレンズデータ一覧
     """
     # 情報ページを開く
-    page = scraping.get_page('https://panasonic.jp/dc/comparison.html')
+    page = scraping.get_page('https://panasonic.jp/dc/comparison.html', cache=False)
 
     # tableタグからデータを収集する
     df = DataFrame()
@@ -501,7 +501,7 @@ def get_o_lens_list(scraping: ScrapingService) -> List[Lens]:
     """
 
     # レンズのURL一覧を取得する
-    page = scraping.get_page('https://www.olympus-imaging.jp/product/dslr/mlens/index.html')
+    page = scraping.get_page('https://www.olympus-imaging.jp/product/dslr/mlens/index.html', cache=False)
     lens_list: List[Tuple[str, str]] = []
     for a_element in page.find_all('h2.productName > a'):
         lens_name = a_element.text.split('/')[0].replace('\n', '')
@@ -653,7 +653,7 @@ def get_s_lens_list(scraping: ScrapingService) -> List[Lens]:
     """
 
     # レンズのURL一覧を取得する
-    page = scraping.get_page('https://www.sigma-global.com/jp/lenses/#/all/micro-four-thirds/')
+    page = scraping.get_page('https://www.sigma-global.com/jp/lenses/#/all/micro-four-thirds/', cache=False)
     lens_list: List[Tuple[str, str]] = []
     for li_element in page.find_all('li.micro-four-thirds'):
         lens_link = 'https://www.sigma-global.com/' + li_element.find('a').attrs['href']
@@ -811,7 +811,7 @@ def get_s_l_lens_list(scraping: ScrapingService) -> List[Lens]:
     """
 
     # レンズのURL一覧を取得する
-    page = scraping.get_page('https://www.sigma-global.com/jp/lenses/#/all/l-mount/')
+    page = scraping.get_page('https://www.sigma-global.com/jp/lenses/#/all/l-mount/', cache=False)
     lens_list: List[Tuple[str, str]] = []
     for li_element in page.find_all('li.l-mount'):
         lens_link = 'https://www.sigma-global.com/' + li_element.find('a').attrs['href']
@@ -1003,7 +1003,7 @@ def get_l_l_lens_list(scraping: ScrapingService) -> List[Lens]:
         'https://us.leica-camera.com/Photography/Leica-SL/SL-Lenses/Vario-Lenses'
     ]
     for page_url in page_list:
-        page = scraping.get_page(page_url)
+        page = scraping.get_page(page_url, cache=False)
         for div_element in page.find_all('div.h2-text-image-multi-layout.module.no-border'):
             h2_element = div_element.find('h2.headline-40')
             if h2_element is None:
@@ -1049,7 +1049,7 @@ def get_la_lens_list(scraping: ScrapingService) -> List[Lens]:
 
     # レンズのURL一覧を取得する
     lens_list: List[Tuple[str, str]] = []
-    page = scraping.get_page('https://www.laowa.jp/cat1/')
+    page = scraping.get_page('https://www.laowa.jp/cat1/', cache=False)
     for div_element in page.find_all('div.product3'):
         h3_element = div_element.find('h3')
         if h3_element is None:
@@ -1322,7 +1322,7 @@ def get_cosina_lens_list(scraping: ScrapingService) -> List[Lens]:
     # レンズの情報を取得する
     output: List[Lens] = []
     for lens_name, lens_url in lens_list:
-        page = scraping.get_page(lens_url, encoding='cp932', cache=False)
+        page = scraping.get_page(lens_url, encoding='cp932')
         temp: Dict[str, str] = {'レンズ名': lens_name, 'URL': lens_url}
         for tr_element in page.find_all('tr'):
             td_elements = tr_element.find_all('td')
