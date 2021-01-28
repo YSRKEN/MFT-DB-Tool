@@ -11,64 +11,6 @@ from service.i_database_service import IDataBaseService
 from service.ulitity import regex, load_csv_lens
 
 
-class DomObject:
-    """DOMオブジェクト"""
-
-    def __init__(self, base_parser: BaseParser):
-        self.base_parser = base_parser
-
-    def find(self, query: str) -> Optional['DomObject']:
-        temp = self.base_parser.find(query, first=True)
-        if temp is None:
-            return None
-        return DomObject(temp)
-
-    def find_all(self, query: str) -> List['DomObject']:
-        return [DomObject(x) for x in self.base_parser.find(query)]
-
-    @property
-    def text(self) -> str:
-        return self.base_parser.text
-
-    @property
-    def full_text(self) -> str:
-        return self.base_parser.full_text
-
-    # noinspection PyTypeChecker
-    @property
-    def attrs(self) -> MutableMapping:
-        temp: Element = self.base_parser
-        return temp.attrs
-
-
-class ScrapingService:
-    """スクレイピング用のラッパークラス"""
-
-    def __init__(self, database: IDataBaseService):
-        self.session = HTMLSession()
-        self.database = database
-        self.database.query('CREATE TABLE IF NOT EXISTS page_cache (url TEXT PRIMARY KEY, text TEXT)')
-
-    def get_page(self, url: str, encoding='', cache=True) -> DomObject:
-        cache_data = self.database.select('SELECT text from page_cache WHERE url=?', (url,))
-        if len(cache_data) == 0 or not cache:
-            temp: Response = self.session.get(url)
-            if encoding != '':
-                temp.encoding = encoding
-            temp2: HTML = self.session.get(url).html
-            time.sleep(1)
-            if cache:
-                print(f'caching... [{url}]')
-                self.database.query('INSERT INTO page_cache (url, text) VALUES (?, ?)',
-                                    (url, temp2.raw_html.decode(temp2.encoding)))
-            return DomObject(temp2)
-        else:
-            return DomObject(HTML(html=cache_data[0]['text']))
-
-    def clear_cache(self):
-        self.database.query('DELETE FROM page_cache')
-
-
 def dict_to_lens_for_p(record: Dict[str, str]) -> Lens:
     """辞書型をレンズデータに変換する
 

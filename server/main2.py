@@ -1,11 +1,16 @@
 from typing import List
 
+import pandas
+
 from model.Lens import Lens
 from service.i_database_service import IDataBaseService
 from service.i_scraping_service import IScrapingService
 from service.lxml_scraping_service import LxmlScrapingService
 from service.maker.panasonic import get_panasonic_lens_list
 from service.sqlite_database_service import SqliteDataBaseService
+
+pandas.options.display.max_columns = None
+pandas.options.display.width = 150
 
 
 def main():
