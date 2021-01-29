@@ -1,17 +1,82 @@
 from decimal import Decimal
-from typing import List
+from typing import List, Dict, Tuple
 
 import pandas
-from pandas import DataFrame
+from pandas import DataFrame, Series
 
-from model.DomObject import DomObject
-from model.Lens import Lens
 from service.i_scraping_service import IScrapingService
 from service.ulitity import regex
 
 
 def cleansing(s: str):
+    """文字列を正規化する"""
     return s.strip()
+
+
+def convert_columns(df: DataFrame, rename_columns: Dict[str, str], delete_columns: List[str]) -> DataFrame:
+    """DataFrameのカラム名を変換する
+
+    Parameters
+    ----------
+    df DataFrame
+    rename_columns リネームするカラム名
+    delete_columns 削除するカラム名
+
+    Returns
+    -------
+    加工後のDataFrame
+    """
+    df2 = df.rename(columns=rename_columns)
+    for d_column in delete_columns:
+        del df2[d_column]
+    return df2
+
+
+def extract_numbers(series: Series, pair_data_patterns: List[str], single_data_patterns: List[str])\
+        -> Tuple[List[str], List[str]]:
+    """ある列について、その各行に含まれる文字列から、数字を1つないし2つ抽出して、リストにまとめる。
+    数字が2つ→リストA・リストBにそれぞれの数字を追加
+    数字が1つ→リストA・リストBに同じ数字を追加
+
+    Parameters
+    ----------
+    series ある列
+    pair_data_pattern 数字が2つ存在する場合のパターン
+    single_data_pattern 数字が1つ存在する場合のパターン
+
+    Returns
+    -------
+    分析後のリストA・リストB
+    """
+
+    list_a: List[str] = []
+    list_b: List[str] = []
+    for data_line in series.values:
+        flg = False
+
+        # 数字が2つ存在する場合のパターン
+        for pair_data_pattern in pair_data_patterns:
+            result = regex(data_line, pair_data_pattern)
+            if len(result) >= 2:
+                list_a.append(result[0])
+                list_b.append(result[1])
+                flg = True
+                break
+        if flg:
+            continue
+
+        # 数字が1つ存在する場合のパターン
+        for single_data_pattern in single_data_patterns:
+            result = regex(data_line, single_data_pattern)
+            if len(result) >= 1:
+                list_a.append(result[0])
+                list_b.append(result[0])
+                flg = True
+                break
+        if flg:
+            continue
+
+    return list_a, list_b
 
 
 def get_panasonic_lens_list(scraping: IScrapingService) -> DataFrame:
@@ -50,7 +115,7 @@ def get_panasonic_lens_list(scraping: IScrapingService) -> DataFrame:
         break
 
     # データを加工し、結合できるように整える
-    df1.rename(columns={
+    df1 = convert_columns(df1, {
         'レンズ名': 'name',
         'URL': 'url',
         '品番': 'product_number',
@@ -62,17 +127,18 @@ def get_panasonic_lens_list(scraping: IScrapingService) -> DataFrame:
         '最大径×全長': 'overall_size',
         '質量': 'weight',
         '防塵・防滴': 'is_drip_proof',
-        'メーカー希望小売価格': 'price'
-    }, inplace=True)
-    del df1['レンズ構成']
-    del df1['絞り羽根 / 形状']
-    del df1['最小絞り値']
-    del df1['レンズコーティング']
-    del df1['対角線画角']
-    del df1['レンズキャップ']
+        'メーカー希望小売価格': 'price',
+    }, [
+        'レンズ構成',
+        '絞り羽根 / 形状',
+        '最小絞り値',
+        'レンズコーティング',
+        '対角線画角',
+        'レンズキャップ',
+    ])
     df1['mount'] = 'マイクロフォーサーズ'
 
-    df2.rename(columns={
+    df2 = convert_columns(df2, {
         'レンズ名': 'name',
         'URL': 'url',
         '品番': 'product_number',
@@ -85,12 +151,13 @@ def get_panasonic_lens_list(scraping: IScrapingService) -> DataFrame:
         '最大径×全長': 'overall_size',
         '質量': 'weight',
         'メーカー希望小売価格': 'price'
-    }, inplace=True)
-    del df2['レンズ構成']
-    del df2['マウント']
-    del df2['絞り羽根 / 形状']
-    del df2['開放絞り']
-    del df2['最小絞り']
+    }, [
+        'レンズ構成',
+        'マウント',
+        '絞り羽根 / 形状',
+        '開放絞り',
+        '最小絞り',
+    ])
     df2['mount'] = 'ライカL'
 
     # 結合
@@ -100,65 +167,22 @@ def get_panasonic_lens_list(scraping: IScrapingService) -> DataFrame:
     df['maker'] = 'Panasonic'
 
     # focal_length
-    wide_focal_length: List[int] = []
-    telephoto_focal_length: List[int] = []
-    for focal_length in df['focal_length'].values:
-        result = regex(focal_length, r'(\d+)mm～(\d+)mm')
-        if len(result) > 0:
-            wide_focal_length.append(int(result[0]))
-            telephoto_focal_length.append(int(result[1]))
-            continue
-        result = regex(focal_length, r'(\d+)-(\d+)mm')
-        if len(result) > 0:
-            wide_focal_length.append(int(result[0]))
-            telephoto_focal_length.append(int(result[1]))
-            continue
-        result = regex(focal_length, r'(\d+)mm')
-        wide_focal_length.append(int(result[0]))
-        telephoto_focal_length.append(int(result[0]))
-    df['wide_focal_length'] = wide_focal_length
-    df['telephoto_focal_length'] = telephoto_focal_length
+    w, t = extract_numbers(df['focal_length'], [r'(\d+)mm～(\d+)mm', r'(\d+)-(\d+)mm'], [r'(\d+)mm'])
+    df['wide_focal_length'] = [int(x) for x in w]
+    df['telephoto_focal_length'] = [int(x) for x in t]
     del df['focal_length']
 
     # f_number
-    wide_f_number: List[float] = []
-    telephoto_f_number: List[float] = []
-    for name in df['name'].values:
-        result = regex(name, r'F(\d+\.?\d*)-(\d+\.?\d*)')
-        if len(result) > 0:
-            wide_f_number.append(float(result[0]))
-            telephoto_f_number.append(float(result[1]))
-            continue
-        result = regex(name, r'F(\d+\.?\d*)')
-        wide_f_number.append(float(result[0]))
-        telephoto_f_number.append(float(result[0]))
-    df['wide_f_number'] = wide_f_number
-    df['telephoto_f_number'] = telephoto_f_number
+    w, t = extract_numbers(df['name'], [r'F(\d+\.?\d*)-(\d+\.?\d*)'], [r'F(\d+\.?\d*)'])
+    df['wide_f_number'] = [float(x) for x in w]
+    df['telephoto_f_number'] = [float(x) for x in t]
 
     # min_focus_distance
-    wide_min_focus_distance: List[float] = []
-    telephoto_min_focus_distance: List[float] = []
-    for min_focus_distance in df['min_focus_distance'].values:
-        result = regex(min_focus_distance, r'(\d+\.?\d+)m / (\d+\.?\d+)m')
-        if len(result) > 0:
-            wide_min_focus_distance.append(int(Decimal(result[0]).scaleb(3)))
-            telephoto_min_focus_distance.append(int(Decimal(result[1]).scaleb(3)))
-            continue
-        result = regex(min_focus_distance, r'(\d+\.?\d+)m～∞.*(\d+\.?\d+)m～∞')
-        if len(result) > 0:
-            wide_min_focus_distance.append(int(Decimal(result[0]).scaleb(3)))
-            telephoto_min_focus_distance.append(int(Decimal(result[1]).scaleb(3)))
-            continue
-        result = regex(min_focus_distance, r'(\d+\.?\d+)m')
-        if len(result) > 0:
-            wide_min_focus_distance.append(int(Decimal(result[0]).scaleb(3)))
-            telephoto_min_focus_distance.append(int(Decimal(result[0]).scaleb(3)))
-            continue
-        result = regex(min_focus_distance, r'(\d+\.?\d+)m～∞')
-        wide_min_focus_distance.append(int(Decimal(result[0]).scaleb(3)))
-        telephoto_min_focus_distance.append(int(Decimal(result[0]).scaleb(3)))
-    df['wide_min_focus_distance'] = wide_min_focus_distance
-    df['telephoto_min_focus_distance'] = telephoto_min_focus_distance
+    w, t = extract_numbers(df['min_focus_distance'],
+                           [r'(\d+\.?\d+)m / (\d+\.?\d+)m', r'(\d+\.?\d+)m～∞.*(\d+\.?\d+)m～∞'],
+                           [r'(\d+\.?\d+)m', r'(\d+\.?\d+)m～∞'])
+    df['wide_min_focus_distance'] = [int(Decimal(x).scaleb(3)) for x in w]
+    df['telephoto_min_focus_distance'] = [int(Decimal(x).scaleb(3)) for x in t]
     del df['min_focus_distance']
 
     return df
