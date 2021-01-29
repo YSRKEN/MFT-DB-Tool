@@ -19,7 +19,9 @@ def main():
     lens_list: List[Lens] = []
 
     # Panasonic
-    lens_list += get_panasonic_lens_list(scraping)
+    df = get_panasonic_lens_list(scraping)
+    df.to_csv('df.csv', index=False, encoding='utf_8_sig')
+
     # OLYMPUS
     # SIGMA
     # LEICA

@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import List
 
 import pandas
@@ -6,13 +7,14 @@ from pandas import DataFrame
 from model.DomObject import DomObject
 from model.Lens import Lens
 from service.i_scraping_service import IScrapingService
+from service.ulitity import regex
 
 
 def cleansing(s: str):
     return s.strip()
 
 
-def get_panasonic_lens_list(scraping: IScrapingService) -> List[Lens]:
+def get_panasonic_lens_list(scraping: IScrapingService) -> DataFrame:
     # 情報ページを開く
     page = scraping.get_page('https://panasonic.jp/dc/comparison.html', cache=False)
 
@@ -54,12 +56,12 @@ def get_panasonic_lens_list(scraping: IScrapingService) -> List[Lens]:
         '品番': 'product_number',
         '35mm判換算焦点距離': 'focal_length',
         '最短撮影距離': 'min_focus_distance',
-        '最大撮影倍率': 'photographing_magnification',
-        '手ブレ補正': 'image_stabilization',
+        '最大撮影倍率': 'max_photographing_magnification',
+        '手ブレ補正': 'has_image_stabilization',
         'フィルターサイズ': 'filter_diameter',
-        '最大径×全長': 'size',
+        '最大径×全長': 'overall_size',
         '質量': 'weight',
-        '防塵・防滴': 'drip_proof',
+        '防塵・防滴': 'is_drip_proof',
         'メーカー希望小売価格': 'price'
     }, inplace=True)
     del df1['レンズ構成']
@@ -76,11 +78,11 @@ def get_panasonic_lens_list(scraping: IScrapingService) -> List[Lens]:
         '品番': 'product_number',
         '焦点距離': 'focal_length',
         '撮影距離範囲': 'min_focus_distance',
-        '手ブレ補正': 'image_stabilization',
+        '手ブレ補正': 'has_image_stabilization',
         'フィルター径': 'filter_diameter',
-        '防塵・防滴': 'drip_proof',
-        '最大撮影倍率': 'photographing_magnification',
-        '最大径×全長': 'size',
+        '防塵・防滴': 'is_drip_proof',
+        '最大撮影倍率': 'max_photographing_magnification',
+        '最大径×全長': 'overall_size',
         '質量': 'weight',
         'メーカー希望小売価格': 'price'
     }, inplace=True)
@@ -94,6 +96,69 @@ def get_panasonic_lens_list(scraping: IScrapingService) -> List[Lens]:
     # 結合
     df = pandas.concat([df1, df2])
 
-    df.to_csv('df.csv', index=False, encoding='utf_8_sig')
+    # 変換用に整形
+    df['maker'] = 'Panasonic'
 
-    return []
+    # focal_length
+    wide_focal_length: List[int] = []
+    telephoto_focal_length: List[int] = []
+    for focal_length in df['focal_length'].values:
+        result = regex(focal_length, r'(\d+)mm～(\d+)mm')
+        if len(result) > 0:
+            wide_focal_length.append(int(result[0]))
+            telephoto_focal_length.append(int(result[1]))
+            continue
+        result = regex(focal_length, r'(\d+)-(\d+)mm')
+        if len(result) > 0:
+            wide_focal_length.append(int(result[0]))
+            telephoto_focal_length.append(int(result[1]))
+            continue
+        result = regex(focal_length, r'(\d+)mm')
+        wide_focal_length.append(int(result[0]))
+        telephoto_focal_length.append(int(result[0]))
+    df['wide_focal_length'] = wide_focal_length
+    df['telephoto_focal_length'] = telephoto_focal_length
+    del df['focal_length']
+
+    # f_number
+    wide_f_number: List[float] = []
+    telephoto_f_number: List[float] = []
+    for name in df['name'].values:
+        result = regex(name, r'F(\d+\.?\d*)-(\d+\.?\d*)')
+        if len(result) > 0:
+            wide_f_number.append(float(result[0]))
+            telephoto_f_number.append(float(result[1]))
+            continue
+        result = regex(name, r'F(\d+\.?\d*)')
+        wide_f_number.append(float(result[0]))
+        telephoto_f_number.append(float(result[0]))
+    df['wide_f_number'] = wide_f_number
+    df['telephoto_f_number'] = telephoto_f_number
+
+    # min_focus_distance
+    wide_min_focus_distance: List[float] = []
+    telephoto_min_focus_distance: List[float] = []
+    for min_focus_distance in df['min_focus_distance'].values:
+        result = regex(min_focus_distance, r'(\d+\.?\d+)m / (\d+\.?\d+)m')
+        if len(result) > 0:
+            wide_min_focus_distance.append(int(Decimal(result[0]).scaleb(3)))
+            telephoto_min_focus_distance.append(int(Decimal(result[1]).scaleb(3)))
+            continue
+        result = regex(min_focus_distance, r'(\d+\.?\d+)m～∞.*(\d+\.?\d+)m～∞')
+        if len(result) > 0:
+            wide_min_focus_distance.append(int(Decimal(result[0]).scaleb(3)))
+            telephoto_min_focus_distance.append(int(Decimal(result[1]).scaleb(3)))
+            continue
+        result = regex(min_focus_distance, r'(\d+\.?\d+)m')
+        if len(result) > 0:
+            wide_min_focus_distance.append(int(Decimal(result[0]).scaleb(3)))
+            telephoto_min_focus_distance.append(int(Decimal(result[0]).scaleb(3)))
+            continue
+        result = regex(min_focus_distance, r'(\d+\.?\d+)m～∞')
+        wide_min_focus_distance.append(int(Decimal(result[0]).scaleb(3)))
+        telephoto_min_focus_distance.append(int(Decimal(result[0]).scaleb(3)))
+    df['wide_min_focus_distance'] = wide_min_focus_distance
+    df['telephoto_min_focus_distance'] = telephoto_min_focus_distance
+    del df['min_focus_distance']
+
+    return df
