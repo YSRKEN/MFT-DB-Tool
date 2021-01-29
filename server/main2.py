@@ -20,7 +20,7 @@ def main():
 
     # Panasonic
     df = get_panasonic_lens_list(scraping)
-    df.to_csv('df.csv', index=False, encoding='utf_8_sig')
+    # df.to_csv('df.csv', index=False, encoding='utf_8_sig')
 
     # OLYMPUS
     # SIGMA

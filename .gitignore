@@ -6,3 +6,4 @@ server/database.db
 *.pyc
 mft-db-tool/.firebase/
 server/lens_data.json
+server/.idea/csv-plugin.xml

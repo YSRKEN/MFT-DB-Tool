@@ -185,4 +185,67 @@ def get_panasonic_lens_list(scraping: IScrapingService) -> DataFrame:
     df['telephoto_min_focus_distance'] = [int(Decimal(x).scaleb(3)) for x in t]
     del df['min_focus_distance']
 
+    # max_photographing_magnification
+    m: List[float] = []
+    for record in df.to_records():
+        temp = record['max_photographing_magnification'].replace('倍', '')
+        if record['mount'] == 'マイクロフォーサーズ':
+            m.append(float(Decimal(temp) * 2))
+        else:
+            m.append(float(temp))
+    df['max_photographing_magnification'] = m
+
+    # filter_diameter
+    filter_diameter: List[float] = []
+    for f in df['filter_diameter']:
+        result = regex(f, r'(\d+.?\d*)mm')
+        if len(result) > 0:
+            filter_diameter.append(float(result[0]))
+        else:
+            filter_diameter.append(-1)
+    df['filter_diameter'] = filter_diameter
+
+    # is_drip_proof
+    df['is_drip_proof'] = df['is_drip_proof'].map(lambda x: x == '○')
+
+    # has_image_stabilization
+    df['has_image_stabilization'] = df['has_image_stabilization'].map(lambda x: x != '－')
+
+    # is_inner_zoom
+    i: List[bool] = []
+    for record in df.to_records():
+        if record['wide_focal_length'] == record['telephoto_focal_length']:
+            i.append(True)
+            continue
+        if record['product_number'] in ['H-F007014', 'H-E08018', 'H-PS45175', 'S-E70200', 'S-R70200']:
+            i.append(True)
+            continue
+        i.append(False)
+    df['is_inner_zoom'] = i
+
+    # overall_diameter, overall_length
+    d, le = extract_numbers(df['overall_size'], [r'(\d+\.?\d*)mm[^\d]*(\d+\.?\d*)mm'], [])
+    df['overall_diameter'] = [float(x) for x in d]
+    df['overall_length'] = [float(x) for x in le]
+    del df['overall_size']
+
+    # weight
+    weight: List[float] = []
+    for f in df['weight']:
+        result = regex(f, r'([\d,]+)g')
+        if len(result) > 0:
+            weight.append(int(result[0].replace(',', '')))
+        else:
+            weight.append(-1)
+    df['weight'] = weight
+
+    # price
+    price: List[float] = []
+    for f in df['price']:
+        result = regex(f, r'([\d,]+) *円')
+        if len(result) > 0:
+            price.append(int(result[0].replace(',', '')))
+        else:
+            price.append(-1)
+    df['price'] = price
     return df
