@@ -4,6 +4,7 @@ from pandas import DataFrame
 
 from model.DomObject import DomObject
 from service.i_scraping_service import IScrapingService
+from service.ulitity import extract_numbers
 
 
 def get_olympus_lens_list(scraping: IScrapingService) -> DataFrame:
@@ -111,4 +112,13 @@ def get_olympus_lens_list(scraping: IScrapingService) -> DataFrame:
         lens_data_list.append(temp_dict)
 
     df = DataFrame.from_records(lens_data_list)
+
+    # 変換用に整形
+    df['maker'] = 'OLYMPUS'
+    w, t = extract_numbers(df['焦点距離'], [r'(\d+)-(\d+)mm', r'(\d+) - (\d+)mm'], [r'(\d+)mm'])
+    df['wide_focal_length'] = [int(x) * 2 for x in w]
+    df['telephoto_focal_length'] = [int(x) * 2 for x in t]
+    # M.ZUIKO DIGITAL　ED 150-400mm F4.5 TC1.25x IS PROは内蔵テレコンを持つので、その対策
+    df.telephoto_focal_length[df.product_number == '150-400_45ispro'] = 1000
+    del df['焦点距離']
     return df

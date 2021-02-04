@@ -5,7 +5,7 @@ import pandas
 from pandas import DataFrame, Series
 
 from service.i_scraping_service import IScrapingService
-from service.ulitity import regex
+from service.ulitity import regex, extract_numbers
 
 
 def cleansing(s: str):
@@ -30,53 +30,6 @@ def convert_columns(df: DataFrame, rename_columns: Dict[str, str], delete_column
     for d_column in delete_columns:
         del df2[d_column]
     return df2
-
-
-def extract_numbers(series: Series, pair_data_patterns: List[str], single_data_patterns: List[str])\
-        -> Tuple[List[str], List[str]]:
-    """ある列について、その各行に含まれる文字列から、数字を1つないし2つ抽出して、リストにまとめる。
-    数字が2つ→リストA・リストBにそれぞれの数字を追加
-    数字が1つ→リストA・リストBに同じ数字を追加
-
-    Parameters
-    ----------
-    series ある列
-    pair_data_pattern 数字が2つ存在する場合のパターン
-    single_data_pattern 数字が1つ存在する場合のパターン
-
-    Returns
-    -------
-    分析後のリストA・リストB
-    """
-
-    list_a: List[str] = []
-    list_b: List[str] = []
-    for data_line in series.values:
-        flg = False
-
-        # 数字が2つ存在する場合のパターン
-        for pair_data_pattern in pair_data_patterns:
-            result = regex(data_line, pair_data_pattern)
-            if len(result) >= 2:
-                list_a.append(result[0])
-                list_b.append(result[1])
-                flg = True
-                break
-        if flg:
-            continue
-
-        # 数字が1つ存在する場合のパターン
-        for single_data_pattern in single_data_patterns:
-            result = regex(data_line, single_data_pattern)
-            if len(result) >= 1:
-                list_a.append(result[0])
-                list_b.append(result[0])
-                flg = True
-                break
-        if flg:
-            continue
-
-    return list_a, list_b
 
 
 def get_panasonic_lens_list(scraping: IScrapingService) -> DataFrame:
