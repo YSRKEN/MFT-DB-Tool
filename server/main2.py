@@ -30,7 +30,7 @@ def main():
     # LEICA
     # COSINA
     # LAOWA
-    # その他(TAMRON・Tokina・KOWA・安原製作所・SAMYANG・DZOFilm・中一光学・七工匠・銘匠光学)
+    # その他(TAMRON・Tokina・KOWA・安原製作所・SAMYANG・DZOFilm・中一光学・七工匠・銘匠光学・Vazen・KAMLAN)
 
     for lens in lens_list:
         print(lens)

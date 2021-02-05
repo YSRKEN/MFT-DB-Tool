@@ -7,3 +7,4 @@ server/database.db
 mft-db-tool/.firebase/
 server/lens_data.json
 server/.idea/csv-plugin.xml
+server/df.csv
