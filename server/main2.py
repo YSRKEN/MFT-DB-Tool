@@ -7,7 +7,7 @@ from service.i_database_service import IDataBaseService
 from service.i_scraping_service import IScrapingService
 from service.lxml_scraping_service import LxmlScrapingService
 from service.maker.olympus import get_olympus_lens_list
-from service.maker.panasonic import get_panasonic_lens_list
+from service.maker.panasonic import get_panasonic_lens_list, get_panasonic_old_lens_list
 from service.sqlite_database_service import SqliteDataBaseService
 
 pandas.options.display.max_columns = None
@@ -20,12 +20,14 @@ def main():
     lens_list: List[Lens] = []
 
     # Panasonic
-    # df = get_panasonic_lens_list(scraping)
-    # df.to_csv('df.csv', index=False, encoding='utf_8_sig')
+    df = get_panasonic_lens_list(scraping)
+    df2 = get_panasonic_old_lens_list(scraping)
+    df = pandas.concat([df, df2])
+    df.to_csv('df-p.csv', index=False, encoding='utf_8_sig')
 
     # OLYMPUS
-    df = get_olympus_lens_list(scraping)
-    df.to_csv('df.csv', index=False, encoding='utf_8_sig')
+    # df = get_olympus_lens_list(scraping)
+    # df.to_csv('df-o.csv', index=False, encoding='utf_8_sig')
     # SIGMA
     # LEICA
     # COSINA
