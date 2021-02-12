@@ -1,5 +1,6 @@
 import warnings
 from decimal import Decimal
+from pprint import pprint
 from typing import List, Tuple, Dict
 
 from pandas import DataFrame
@@ -21,11 +22,26 @@ def get_olympus_lens_list(scraping: IScrapingService) -> DataFrame:
         lens_product_number = a_element.attrs['href'].replace('/product/dslr/mlens/', '').replace('/index.html', '')
         lens_list.append((lens_name, lens_product_number))
 
+    page = scraping.get_page('https://www.olympus-imaging.jp/product/dslr/record/index.html', cache=False)
+    for a_element in page.find_all('div.section'):
+        div_element = a_element.find('div.mb15 > h2')
+        a_element2 = a_element.find('li > a')
+        if div_element is None or a_element2 is None:
+            continue
+        lens_name = div_element.text
+        if 'M.ZUIKO DIGITAL' not in lens_name:
+            continue
+        lens_product_number = a_element2.attrs['href'].replace('/product/dslr/mlens/', '').replace('/index.html', '')
+        lens_list.append((lens_name, lens_product_number))
+
     # レンズごとに情報を取得する
     lens_data_list: List[Dict[str, str]] = []
     for lens_name, lens_product_number in lens_list:
         # 詳細ページから情報を取得する
-        spec_url = f'https://www.olympus-imaging.jp/product/dslr/mlens/{lens_product_number}/spec.html'
+        if lens_product_number != '14-42_35-56':
+            spec_url = f'https://www.olympus-imaging.jp/product/dslr/mlens/{lens_product_number}/spec.html'
+        else:
+            spec_url = f'https://www.olympus-imaging.jp/product/dslr/mlens/{lens_product_number}/spec/index.html'
         page = scraping.get_page(spec_url)
         temp_dict: Dict[str, str] = {}
         for tr_element in page.find('table').find_all('tr'):
@@ -91,6 +107,7 @@ def get_olympus_lens_list(scraping: IScrapingService) -> DataFrame:
             '最大撮影倍率（35mm判換算）',
             '手ぶれ補正性能',
             'ズーム',
+            'ズーム方式',
         ]
         for column in del_column_list:
             if column in temp_dict:
@@ -112,6 +129,9 @@ def get_olympus_lens_list(scraping: IScrapingService) -> DataFrame:
         if '防滴性能 / 防塵機構' in temp_dict:
             temp_dict['防滴処理'] = temp_dict['防滴性能 / 防塵機構']
             del temp_dict['防滴性能 / 防塵機構']
+        if '価格' in temp_dict:
+            temp_dict['希望小売価格'] = temp_dict['価格']
+            del temp_dict['価格']
         lens_data_list.append(temp_dict)
 
     df = DataFrame.from_records(lens_data_list)
