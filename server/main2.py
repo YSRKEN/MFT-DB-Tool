@@ -7,6 +7,7 @@ from service.i_database_service import IDataBaseService
 from service.i_scraping_service import IScrapingService
 from service.lxml_scraping_service import LxmlScrapingService
 from service.maker.olympus import get_olympus_lens_list
+from service.maker.sigma import get_sigma_lens_list
 from service.sqlite_database_service import SqliteDataBaseService
 
 pandas.options.display.max_columns = None
@@ -18,16 +19,18 @@ def main():
     scraping: IScrapingService = LxmlScrapingService(database)
     lens_list: List[Lens] = []
 
-    # Panasonic
     """
+    # Panasonic
     df1 = get_panasonic_lens_list(scraping)
     df2 = get_panasonic_old_lens_list(scraping)
-    """
 
     # OLYMPUS
     df3 = get_olympus_lens_list(scraping)
-    df3.to_csv('df.csv', index=False, encoding='utf_8_sig')
+    """
+
     # SIGMA
+    df4 = get_sigma_lens_list(scraping)
+    df4.to_csv('df.csv', index=False, encoding='utf_8_sig')
     # LEICA
     # COSINA
     # LAOWA
