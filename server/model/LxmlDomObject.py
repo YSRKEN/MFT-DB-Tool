@@ -1,6 +1,7 @@
 from typing import Optional, List, MutableMapping
 
 # noinspection PyProtectedMember
+from lxml import html
 from lxml.html import HtmlElement
 from model.DomObject import DomObject
 
@@ -31,3 +32,7 @@ class LxmlDomObject(DomObject):
     @property
     def attrs(self) -> MutableMapping:
         return self.dom.attrib
+
+    @property
+    def html(self) -> str:
+        return html.tostring(self.dom, method='html', encoding='unicode')

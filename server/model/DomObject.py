@@ -65,3 +65,14 @@ class DomObject(metaclass=ABCMeta):
             属性をKey、属性値をValueとする辞書
         """
         pass
+
+    @property
+    @abstractmethod
+    def html(self) -> str:
+        """HTMLの実体を返す
+
+        Returns
+        -------
+            HTMLの実体
+        """
+        pass
