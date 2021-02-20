@@ -5,6 +5,7 @@ from pandas import DataFrame
 
 from model.DomObject import DomObject
 from service.i_scraping_service import IScrapingService
+from service.ulitity import extract_numbers
 
 
 def get_sigma_lens_list(scraping: IScrapingService) -> DataFrame:
@@ -143,5 +144,30 @@ def get_sigma_lens_list(scraping: IScrapingService) -> DataFrame:
     for column in del_column_list:
         if column in df:
             del df[column]
+
+    # 変換用に整形
+    print(df)
+    df['maker'] = 'SIGMA'
+    df['name'] = df['レンズ名']
+    del df['レンズ名']
+    df['product_number'] = df['エディションナンバー']
+    del df['エディションナンバー']
+
+    w, t = extract_numbers(df['レンズ名'], [r'(\d+)-(\d+)mm'], [r'(\d+)mm'])
+    wide_focal_length: List[int] = []
+    telephoto_focal_length: List[int] = []
+    for wf, tf, mount, name in zip(w, t, df['マウント']. df['name']):
+        if mount == 'マイクロフォーサーズ':
+            wide_focal_length.append(int(wf) * 2)
+            telephoto_focal_length.append(int(tf) * 2)
+        else:
+            if 'DC' in name:
+                wide_focal_length.append(int(1.5 * int(wf)))
+                telephoto_focal_length.append(int(1.5 * int(tf)))
+            else:
+                wide_focal_length.append(int(wf))
+                telephoto_focal_length.append(int(tf))
+    df['wide_focal_length'] = df['wide_focal_length']
+    df['telephoto_focal_length'] = df['telephoto_focal_length']
 
     return df
