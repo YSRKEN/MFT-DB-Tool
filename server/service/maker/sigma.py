@@ -10,33 +10,33 @@ from service.ulitity import extract_numbers
 
 def get_sigma_lens_list(scraping: IScrapingService) -> DataFrame:
     # レンズのURL一覧を取得する
-    page = scraping.get_page('https://www.sigma-global.com/jp/lenses/#/all/micro-four-thirds/', cache=False)
+    page = scraping.get_page('https://www.sigma-global.com/jp/lenses/', cache=False)
     lens_list_mft: List[Tuple[str, str]] = []
-    for li_element in page.find_all('li.micro-four-thirds'):
-        lens_link = 'https://www.sigma-global.com/' + li_element.find('a').attrs['href']
-        if 'product' not in lens_link:
-            continue
-        lens_name = li_element.find('b').text
-        lens_list_mft.append((lens_name, lens_link))
-
-    page = scraping.get_page('https://www.sigma-global.com/jp/lenses/#/all/l-mount/', cache=False)
     lens_list_l: List[Tuple[str, str]] = []
-    for li_element in page.find_all('li.l-mount'):
+    for li_element in page.find('div.p-lens-search__main').find_all('li'):
         lens_link = 'https://www.sigma-global.com/' + li_element.find('a').attrs['href']
-        if 'product' not in lens_link:
+        if 'lenses' not in lens_link:
             continue
-        lens_name = li_element.find('b').text
-        lens_list_l.append((lens_name, lens_link))
+        h4_element = li_element.find('h4')
+        if h4_element is None:
+            continue
+        lens_name = h4_element.text
+        if 'micro-four-thirds' in li_element.attrs['data-lens-mount']:
+            lens_list_mft.append((lens_name, lens_link))
+        if 'l-mount' in li_element.attrs['data-lens-mount']:
+            lens_list_l.append((lens_name, lens_link))
 
     page: DomObject = scraping.get_page('https://www.sigma-global.com/jp/lenses/discontinued/', cache=False)
     lens_list_old: List[Tuple[str, str]] = []
-    for section_element in page.find_all('nav > section'):
-        for a_element in section_element.find_all('a'):
-            lens_link = 'https://www.sigma-global.com' + a_element.attrs['href']
-            if 'discontinued' not in lens_link:
-                continue
-            lens_name = a_element.text
-            lens_list_old.append((lens_name, lens_link))
+    for li_element in page.find_all('li.p-support-service__item'):
+        a_element = li_element.find('a')
+        lens_link = a_element.attrs['href']
+        lens_name = a_element.find('h4 > span').text
+        lens_list_old.append((lens_name, lens_link))
+    pprint(lens_list_mft)
+    pprint(lens_list_l)
+    pprint(lens_list_old)
+    exit()
 
     # レンズごとに情報を取得する
     lens_raw_data_list: List[Dict[str, any]] = []
