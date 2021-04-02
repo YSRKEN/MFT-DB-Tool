@@ -9,6 +9,13 @@ from service.ulitity import extract_numbers
 
 
 def item_page_to_raw_dict(page: DomObject, lens_mount: str) -> Dict[str, any]:
+    if lens_mount == '':
+        if 'マイクロフォーサーズ' not in page.full_text:
+            return {}
+        else:
+            lens_mount_ = 'マイクロフォーサーズ'
+    else:
+        lens_mount_ = lens_mount
     output: Dict[str, any] = {}
     for div_element in page.find_all('div.p-spec-table__fields'):
         key_div_element = div_element.find('div.p-spec-table__header > h3')
@@ -19,21 +26,17 @@ def item_page_to_raw_dict(page: DomObject, lens_mount: str) -> Dict[str, any]:
         ul_element = div_element2.find('ul')
         if ul_element is None:
             # 項目が1個しかないので簡単
-            value = div_element2.text.strip()
+            value = div_element2.text.strip().strip('\n').replace('\n', ' ')
             output[key] = value
         else:
             # レンズマウントごとに分類されるので注意する
             for li_element in ul_element.find_all('li'):
-                if lens_mount == 'マイクロフォーサーズ' and 'マイクロフォーサーズ' in li_element.full_text:
-                    value = li_element.full_text.replace('マイクロフォーサーズマウント', '').strip()
+                if lens_mount_ == 'マイクロフォーサーズ' and 'マイクロフォーサーズ' in li_element.full_text:
+                    value = li_element.full_text.replace('マイクロフォーサーズマウント', '').strip().strip('\n').replace('\n', ' ')
                     output[key] = value
-                if lens_mount == 'ライカLマウント' and 'L マウント' in li_element.full_text:
-                    value = li_element.full_text.replace('L マウント', '').strip()
+                if lens_mount_ == 'ライカLマウント' and 'L マウント' in li_element.full_text:
+                    value = li_element.full_text.replace('L マウント', '').strip().strip('\n').replace('\n', ' ')
                     output[key] = value
-                if lens_mount == '':
-                    if key not in output:
-                        output[key] = ''
-                    output[key] += li_element.full_text.strip() + '\n'
     return output
 
 
@@ -84,12 +87,14 @@ def get_sigma_lens_list(scraping: IScrapingService) -> DataFrame:
 
         page = scraping.get_page(lens_link)
         temp_dict: Dict[str, str] = {
-            'マウント': '',
+            'マウント': 'マイクロフォーサーズ',
             'name': lens_name,
             'url': lens_link
         }
-        temp_dict.update(item_page_to_raw_dict(page, ''))
-        lens_raw_data_list.append(temp_dict)
+        temp_dict2 = item_page_to_raw_dict(page, '')
+        if len(temp_dict2) > 0:
+            temp_dict.update(temp_dict2)
+            lens_raw_data_list.append(temp_dict)
     df = DataFrame.from_records(lens_raw_data_list)
     return df
 
