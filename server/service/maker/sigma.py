@@ -33,10 +33,21 @@ def get_sigma_lens_list(scraping: IScrapingService) -> DataFrame:
         lens_link = a_element.attrs['href']
         lens_name = a_element.find('h4 > span').text
         lens_list_old.append((lens_name, lens_link))
-    pprint(lens_list_mft)
-    pprint(lens_list_l)
-    pprint(lens_list_old)
-    exit()
+
+    # レンズごとに情報を取得する
+    lens_raw_data_list: List[Dict[str, any]] = []
+    for lens_list, lens_mount in [(lens_list_mft, 'マイクロフォーサーズ'), (lens_list_l, 'ライカLマウント')]:
+        for lens_name, lens_link in lens_list:
+            print(lens_mount + '  ' + lens_name)
+            print('  ' + lens_link)
+    for lens_name, lens_link in lens_list_old:
+        print(lens_name)
+        print('  ' + lens_link)
+    df = DataFrame.from_records(lens_raw_data_list)
+    return df
+
+
+
 
     # レンズごとに情報を取得する
     lens_raw_data_list: List[Dict[str, any]] = []
