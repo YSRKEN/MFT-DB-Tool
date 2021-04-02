@@ -8,13 +8,42 @@ from service.i_scraping_service import IScrapingService
 from service.ulitity import extract_numbers
 
 
+def item_page_to_raw_dict(page: DomObject, lens_mount: str) -> Dict[str, any]:
+    output: Dict[str, any] = {}
+    for div_element in page.find_all('div.p-spec-table__fields'):
+        key_div_element = div_element.find('div.p-spec-table__header > h3')
+        if key_div_element is None:
+            key_div_element = div_element.find('header.p-spec-table__header > h3')
+        key = key_div_element.text
+        div_element2 = div_element.find('div.p-spec-table__td')
+        ul_element = div_element2.find('ul')
+        if ul_element is None:
+            # 項目が1個しかないので簡単
+            value = div_element2.text.strip()
+            output[key] = value
+        else:
+            # レンズマウントごとに分類されるので注意する
+            for li_element in ul_element.find_all('li'):
+                if lens_mount == 'マイクロフォーサーズ' and 'マイクロフォーサーズ' in li_element.full_text:
+                    value = li_element.full_text.replace('マイクロフォーサーズマウント', '').strip()
+                    output[key] = value
+                if lens_mount == 'ライカLマウント' and 'L マウント' in li_element.full_text:
+                    value = li_element.full_text.replace('L マウント', '').strip()
+                    output[key] = value
+                if lens_mount == '':
+                    if key not in output:
+                        output[key] = ''
+                    output[key] += li_element.full_text.strip() + '\n'
+    return output
+
+
 def get_sigma_lens_list(scraping: IScrapingService) -> DataFrame:
     # レンズのURL一覧を取得する
     page = scraping.get_page('https://www.sigma-global.com/jp/lenses/', cache=False)
     lens_list_mft: List[Tuple[str, str]] = []
     lens_list_l: List[Tuple[str, str]] = []
     for li_element in page.find('div.p-lens-search__main').find_all('li'):
-        lens_link = 'https://www.sigma-global.com/' + li_element.find('a').attrs['href']
+        lens_link = li_element.find('a').attrs['href']
         if 'lenses' not in lens_link:
             continue
         h4_element = li_element.find('h4')
@@ -40,9 +69,27 @@ def get_sigma_lens_list(scraping: IScrapingService) -> DataFrame:
         for lens_name, lens_link in lens_list:
             print(lens_mount + '  ' + lens_name)
             print('  ' + lens_link)
+
+            page = scraping.get_page(lens_link)
+            temp_dict: Dict[str, str] = {
+                'マウント': lens_mount,
+                'name': lens_name,
+                'url': lens_link
+            }
+            temp_dict.update(item_page_to_raw_dict(page, lens_mount))
+            lens_raw_data_list.append(temp_dict)
     for lens_name, lens_link in lens_list_old:
         print(lens_name)
         print('  ' + lens_link)
+
+        page = scraping.get_page(lens_link)
+        temp_dict: Dict[str, str] = {
+            'マウント': '',
+            'name': lens_name,
+            'url': lens_link
+        }
+        temp_dict.update(item_page_to_raw_dict(page, ''))
+        lens_raw_data_list.append(temp_dict)
     df = DataFrame.from_records(lens_raw_data_list)
     return df
 

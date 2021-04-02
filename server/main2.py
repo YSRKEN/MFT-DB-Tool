@@ -3,7 +3,6 @@ from typing import List
 import pandas
 from pandas import DataFrame
 
-from model.Lens import Lens
 from service.i_database_service import IDataBaseService
 from service.i_scraping_service import IScrapingService
 from service.lxml_scraping_service import LxmlScrapingService
@@ -56,8 +55,8 @@ def main(maker: List[str]):
 
 if __name__ == '__main__':
     maker = [
-        'Panasonic',
-        'OLYMPUS',
+        # 'Panasonic',
+        # 'OLYMPUS',
         'SIGMA',
     ]
     main(maker)
