@@ -70,13 +70,20 @@ def get_sigma_lens_list(scraping: IScrapingService) -> DataFrame:
     lens_raw_data_list: List[Dict[str, any]] = []
     for lens_list, lens_mount in [(lens_list_mft, 'マイクロフォーサーズ'), (lens_list_l, 'ライカLマウント')]:
         for lens_name, lens_link in lens_list:
-            print(lens_mount + '  ' + lens_name)
+            if 'lenses/c' in lens_link and '| Contemporary' not in lens_name:
+                lens_name2 = lens_name + ' | Contemporary'
+            elif 'lenses/a' in lens_link and '| Art' not in lens_name:
+                lens_name2 = lens_name + ' | Art'
+            else:
+                lens_name2 = lens_name
+
+            print(lens_name2 + '  ' + lens_name)
             print('  ' + lens_link)
 
             page = scraping.get_page(lens_link)
             temp_dict: Dict[str, str] = {
                 'mount': lens_mount,
-                'name': lens_name,
+                'name': lens_name2,
                 'url': lens_link
             }
             temp_dict.update(item_page_to_raw_dict(page, lens_mount))
