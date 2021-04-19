@@ -36,6 +36,10 @@ def extract_numbers(series: Series, pair_data_patterns: List[str], single_data_p
     list_a: List[str] = []
     list_b: List[str] = []
     for data_line in series.values:
+        if data_line != data_line:
+            list_a.append('')
+            list_b.append('')
+            continue
         flg = False
 
         # 数字が2つ存在する場合のパターン

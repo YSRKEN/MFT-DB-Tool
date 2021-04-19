@@ -1,3 +1,4 @@
+from decimal import Decimal
 from pprint import pprint
 from typing import List, Tuple, Dict
 
@@ -5,7 +6,7 @@ from pandas import DataFrame
 
 from model.DomObject import DomObject
 from service.i_scraping_service import IScrapingService
-from service.ulitity import extract_numbers
+from service.ulitity import extract_numbers, regex
 
 
 def item_page_to_raw_dict(page: DomObject, lens_mount: str) -> Dict[str, any]:
@@ -118,13 +119,11 @@ def get_sigma_lens_list(scraping: IScrapingService) -> DataFrame:
     del df['付属品']
     del df['対応マウント / バーコード']
 
-    return df
-
-    # 変換用に整形
-    w, t = extract_numbers(df['レンズ名'], [r'(\d+)-(\d+)mm'], [r'(\d+)mm'])
+    # focal_length
+    w, t = extract_numbers(df['name'], [r'(\d+)-(\d+)mm'], [r'(\d+)mm'])
     wide_focal_length: List[int] = []
     telephoto_focal_length: List[int] = []
-    for wf, tf, mount, name in zip(w, t, df['マウント']. df['name']):
+    for wf, tf, mount, name in zip(w, t, df['mount'], df['name']):
         if mount == 'マイクロフォーサーズ':
             wide_focal_length.append(int(wf) * 2)
             telephoto_focal_length.append(int(tf) * 2)
@@ -135,7 +134,117 @@ def get_sigma_lens_list(scraping: IScrapingService) -> DataFrame:
             else:
                 wide_focal_length.append(int(wf))
                 telephoto_focal_length.append(int(tf))
-    df['wide_focal_length'] = df['wide_focal_length']
-    df['telephoto_focal_length'] = df['telephoto_focal_length']
+    df['wide_focal_length'] = wide_focal_length
+    df['telephoto_focal_length'] = telephoto_focal_length
+
+    # f_number
+    w, t = extract_numbers(df['name'], [r'F(\d+\.?\d*)-(\d+\.?\d*)'], [r'F(\d+\.?\d*)'])
+    df['wide_f_number'] = [float(x) for x in w]
+    df['telephoto_f_number'] = [float(x) for x in t]
+
+    # min_focus_distance
+    w, t = extract_numbers(df['最短撮影距離'],
+                           [r'(\d+\.?\d*)-(\d+\.?\d*)cm', r'(\d+\.?\d*) \(W\)-(\d+\.?\d*) \(T\)cm',
+                            r'(\d+\.?\d*)\(W\) - (\d+\.?\d*)\(T\)cm'],
+                           [r'(\d+\.?\d*)cm'])
+
+    df['wide_min_focus_distance'] = [int(Decimal(x).scaleb(1)) for x in w]
+    df['telephoto_min_focus_distance'] = [int(Decimal(x).scaleb(1)) for x in t]
+    del df['最短撮影距離']
+
+    # max_photographing_magnification
+    m: List[float] = []
+    for record in df.to_records():
+        temp = regex(record['最大撮影倍率'].replace('：', ':'), r'.*1:(\d+\.?\d*).*1:(\d+\.?\d*).*')
+        if len(temp) > 0:
+            if float(temp[0]) < float(temp[1]):
+                denominator = temp[0]
+            else:
+                denominator = temp[1]
+        else:
+            temp = regex(record['最大撮影倍率'].replace('：', ':'), r'.*1:(\d+\.?\d*).*')
+            denominator = temp[0]
+        if record['mount'] == 'マイクロフォーサーズ':
+            m.append(float((Decimal('2') / Decimal(denominator)).quantize(Decimal('0.01'))))
+        else:
+            if 'DC' in record['name']:
+                m.append(float((Decimal('1.5') / Decimal(denominator)).quantize(Decimal('0.01'))))
+            else:
+                m.append(float((Decimal('1') / Decimal(denominator)).quantize(Decimal('0.01'))))
+    df['max_photographing_magnification'] = m
+    del df['最大撮影倍率']
+
+    # filter_diameter
+    filter_diameter: List[float] = []
+    for f in df['フィルターサイズ']:
+        if f == f:
+            result = regex(f, r'(\d+.?\d*)mm')
+            if len(result) > 0:
+                filter_diameter.append(float(result[0]))
+            else:
+                filter_diameter.append(-1)
+        else:
+            filter_diameter.append(-1)
+    df['filter_diameter'] = filter_diameter
+    del df['フィルターサイズ']
+
+    # is_drip_proof
+    df['is_drip_proof'] = df['name'].map(lambda x: 'DC' in x or 'DG' in x)
+
+    # has_image_stabilization
+    df['has_image_stabilization'] = df['name'].map(lambda x: 'OS' in x)
+
+    # is_inner_zoom
+    is_inner_zoom: List[bool] = []
+    for record in df.to_dict(orient='records'):
+        is_inner_zoom.append(record['wide_focal_length'] == record['telephoto_focal_length'])
+    df['is_inner_zoom'] = is_inner_zoom
+
+    # overall_diameter, overall_length
+    overall_diameter, overall_length = extract_numbers(df['最大径 × 長さ'], [r'(\d+\.?\d*)mm[^\d]*(\d+\.?\d*)mm'], [])
+    for i in range(0, len(df)):
+        # データが存在しない分については手動で埋める
+        if df['name'].values[i] == '19mm F2.8 EX DN':
+            overall_diameter[i] = '60.6'
+            overall_length[i] = '45.7'
+        elif df['name'].values[i] == '30mm F2.8 EX DN':
+            overall_diameter[i] = '60.6'
+            overall_length[i] = '38.6'
+        elif df['name'].values[i] == '19mm F2.8 DN | Art':
+            overall_diameter[i] = '60.8'
+            overall_length[i] = '45.7'
+        elif df['name'].values[i] == '30mm F2.8 DN | Art':
+            overall_diameter[i] = '60.8'
+            overall_length[i] = '40.5'
+        elif df['name'].values[i] == '60mm F2.8 DN | Art':
+            overall_diameter[i] = '60.8'
+            overall_length[i] = '55.5'
+    df['overall_diameter'] = [float(x) for x in overall_diameter]
+    df['overall_length'] = [float(x) for x in overall_length]
+    del df['最大径 × 長さ']
+
+    # weight
+    weight: List[float] = []
+    for i in range(0, len(df)):
+        f = df['質量'].values[i]
+        if f != f:
+            if df['name'].values[i] == '19mm F2.8 EX DN':
+                weight.append(140)
+            elif df['name'].values[i] == '30mm F2.8 EX DN':
+                weight.append(130)
+            elif df['name'].values[i] == '19mm F2.8 DN | Art':
+                weight.append(160)
+            elif df['name'].values[i] == '30mm F2.8 DN | Art':
+                weight.append(140)
+            elif df['name'].values[i] == '60mm F2.8 DN | Art':
+                weight.append(190)
+            continue
+        result = regex(f, r'([\d,]+)g')
+        if len(result) > 0:
+            weight.append(int(result[0].replace(',', '')))
+        else:
+            weight.append(int(f))
+    df['weight'] = weight
+    del df['質量']
 
     return df
