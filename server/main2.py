@@ -55,8 +55,8 @@ def main(maker: List[str]):
 
 if __name__ == '__main__':
     maker = [
-        # 'Panasonic',
-        # 'OLYMPUS',
+        'Panasonic',
+        'OLYMPUS',
         'SIGMA',
     ]
     main(maker)

@@ -247,4 +247,15 @@ def get_sigma_lens_list(scraping: IScrapingService) -> DataFrame:
     df['weight'] = weight
     del df['質量']
 
+    # price
+    price: List[float] = []
+    for f in df['希望小売価格']:
+        result = regex(f, r'([\d,]+) *円')
+        if len(result) > 0:
+            price.append(int(result[0].replace(',', '')))
+        else:
+            price.append(26240)  # アドホックな修正
+    df['price'] = price
+    del df['希望小売価格']
+
     return df
