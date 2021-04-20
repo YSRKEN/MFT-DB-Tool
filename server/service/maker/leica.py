@@ -4,7 +4,7 @@ from typing import List, Tuple, Dict
 from pandas import DataFrame
 
 from service.i_scraping_service import IScrapingService
-from service.ulitity import convert_columns
+from service.ulitity import convert_columns, extract_numbers
 
 
 def get_leica_lens_list(scraping: IScrapingService) -> DataFrame:
@@ -60,6 +60,8 @@ def get_leica_lens_list(scraping: IScrapingService) -> DataFrame:
         'Length': 'Length to bayonet mount',
         'Length to bayonet flange': 'Length to bayonet mount',
         'Diameter': 'Largest diameter',
+        'レンズ名': 'name',
+        'URL': 'url',
     }, [
         'View angle (diagonal/horizontal/vertical) Full-frame (24 × 36 mm)',
         'Field angle (diagonal, horizontal, vertical)',
@@ -88,5 +90,15 @@ def get_leica_lens_list(scraping: IScrapingService) -> DataFrame:
         'Entrance pupil position',
         'Smallest object field',
     ])
+
+    # product_number
+    df['product_number'] = df['Order number'].map(lambda x: x.replace(' ', ''))
+    del df['Order number']
+
+    # wide_focal_length, telephoto_focal_length
+    w, t = extract_numbers(df['name'], [r'SL(\d+)-(\d+) f', r'SL (\d+)-(\d+) f'],
+                           [r'SL(\d+) f', r'SL (\d+) f', r'SL 1:\d/(\d+)'])
+    df['wide_focal_length'] = w
+    df['telephoto_focal_length'] = t
 
     return df

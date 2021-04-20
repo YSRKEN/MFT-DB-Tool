@@ -58,6 +58,24 @@ def main(maker: List[str]):
     # LAOWA
     # その他(TAMRON・Tokina・KOWA・安原製作所・SAMYANG・DZOFilm・中一光学・七工匠・銘匠光学・Vazen・KAMLAN・ヨンヌオ)
 
+    column_list = ['maker', 'name', 'product_number', 'wide_focal_length', 'telephoto_focal_length', 'wide_f_number',
+                   'telephoto_f_number', 'wide_min_focus_distance', 'telephoto_min_focus_distance',
+                   'max_photographing_magnification', 'filter_diameter', 'is_drip_proof', 'has_image_stabilization',
+                   'is_inner_zoom', 'overall_diameter', 'overall_length', 'weight', 'price', 'mount', 'url']
+    for column in df.columns:
+        if column not in column_list:
+            column_list.append(column)
+    temp = []
+    for record in df.to_dict(orient='records'):
+        temp2 = {}
+        for key in column_list:
+            if key in record:
+                temp2[key] = record[key]
+            else:
+                temp2[key] = ''
+        temp.append(temp2)
+    df = DataFrame.from_records(temp)
+
     df.to_csv('df.csv', index=False, encoding='utf_8_sig')
 
 
