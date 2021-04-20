@@ -1,10 +1,11 @@
+from decimal import Decimal
 from pprint import pprint
 from typing import List, Tuple, Dict
 
 from pandas import DataFrame
 
 from service.i_scraping_service import IScrapingService
-from service.ulitity import convert_columns, extract_numbers
+from service.ulitity import convert_columns, extract_numbers, regex
 
 
 def get_leica_lens_list(scraping: IScrapingService) -> DataFrame:
@@ -97,8 +98,37 @@ def get_leica_lens_list(scraping: IScrapingService) -> DataFrame:
 
     # wide_focal_length, telephoto_focal_length
     w, t = extract_numbers(df['name'], [r'SL(\d+)-(\d+) f', r'SL (\d+)-(\d+) f'],
-                           [r'SL(\d+) f', r'SL (\d+) f', r'SL 1:\d/(\d+)'])
+                           [r'SL(\d+) f', r'SL (\d+) f', r'SL 1:\d+\.?\d*/(\d+)'])
     df['wide_focal_length'] = w
     df['telephoto_focal_length'] = t
 
+    # wide_f_number, telephoto_f_number
+    w, t = extract_numbers(df['name'], [r'f/(\d+\.?\d*)-(\d+\.?\d*)'],
+                           [r'f/(\d+\.?\d*)', r'SL 1:(\d+\.?\d*)/\d+'])
+    df['wide_f_number'] = w
+    df['telephoto_f_number'] = t
+
+    # wide_min_focus_distance, telephoto_min_focus_distance
+    w, t = extract_numbers(df['Working range'], [],
+                           [r'(\d+\.?\d*)mm to', r'(\d+\.?\d*) m to', r'to (\d+\.?\d*) m'])
+    # 微調整
+    for i in range(0, len(df)):
+        if 'mm to' not in df['Working range'].values[i]:
+            w[i] = str(int(Decimal(w[i]).scaleb(3)))
+            t[i] = str(int(Decimal(t[i]).scaleb(3)))
+    df['wide_min_focus_distance'] = [int(x) for x in w]
+    df['telephoto_min_focus_distance'] = [int(x) for x in t]
+    del df['Working range']
+
+    # max_photographing_magnification
+    m: List[float] = []
+    for record in df.to_records():
+        denominator = regex(record['Largest reproduction ratio'], r'1:(\d+\.?\d*)')
+        m.append(float((Decimal('1') / Decimal(denominator[0])).quantize(Decimal('0.01'))))
+    df['max_photographing_magnification'] = m
+    del df['Largest reproduction ratio']
+
+    # filter_diameter
+    df['filter_diameter'] = df['Filter mount'].map(lambda x: int(x.replace('E', '')))
+    del df['Filter mount']
     return df
