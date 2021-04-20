@@ -131,4 +131,64 @@ def get_leica_lens_list(scraping: IScrapingService) -> DataFrame:
     # filter_diameter
     df['filter_diameter'] = df['Filter mount'].map(lambda x: int(x.replace('E', '')))
     del df['Filter mount']
+
+    # is_drip_proof, has_image_stabilization, is_inner_zoom
+    is_drip_proof = []
+    has_image_stabilization = []
+    is_inner_zoom = []
+    for record in df.to_records():
+        is_drip_proof.append(False)
+        if record['name'] in ['VARIO-ELMARIT-SL24-90 f/2.8-4 ASPH.', 'APO VARIO-ELMARIT-SL90-280 f/2.8-4']:
+            has_image_stabilization.append(True)
+        else:
+            has_image_stabilization.append(False)
+        if record['name'] in ['APO VARIO-ELMARIT-SL90-280 f/2.8-4'] or \
+                record['wide_focal_length'] == record['telephoto_focal_length']:
+            is_inner_zoom.append(True)
+        else:
+            is_inner_zoom.append(False)
+    df['is_drip_proof'] = is_drip_proof
+    df['has_image_stabilization'] = has_image_stabilization
+    df['is_inner_zoom'] = is_inner_zoom
+
+    # overall_diameter, overall_length
+    overall_diameter = []
+    overall_length = []
+    for record in df.to_records():
+        if '/' in record['Largest diameter']:
+            diameter = regex(record['Largest diameter'].replace('\u2009', ' '), r'(\d+\.?\d*)/\d+ mm')
+        elif ':' in record['Largest diameter']:
+            diameter = regex(record['Largest diameter'].replace('\u2009', ' '), r': (\d+\.?\d*) mm')
+        else:
+            diameter = regex(record['Largest diameter'].replace('\u2009', ' '), r'(\d+\.?\d*) mm')
+        if '/' in record['Length to bayonet mount']:
+            length = regex(record['Length to bayonet mount'].replace('\u2009', ' '), r'(\d+\.?\d*)/\d+ mm')
+        elif ':' in record['Length to bayonet mount']:
+            length = regex(record['Length to bayonet mount'].replace('\u2009', ' '), r': (\d+\.?\d*) mm')
+        else:
+            length = regex(record['Length to bayonet mount'].replace('\u2009', ' '), r'(\d+\.?\d*) mm')
+        overall_diameter.append(float(diameter[0]))
+        overall_length.append(float(length[0]))
+    df['overall_diameter'] = overall_diameter
+    df['overall_length'] = overall_length
+    del df['Largest diameter']
+    del df['Length to bayonet mount']
+
+    # weight
+    weight: List[float] = []
+    for i in range(0, len(df)):
+        f = df['Weight'].values[i].replace('\u2009', ' ')
+        result = regex(f, r'([\d.]+) g')
+        if len(result) > 0:
+            result2 = regex(f, r'([\d.]+)/[\d.]+ g')
+            if len(result2) > 0:
+                weight.append(int(result2[0].replace('.', '')))
+            else:
+                weight.append(int(result[0].replace('.', '')))
+        else:
+            weight.append(int(f))
+    df['weight'] = weight
+    del df['Weight']
+
+    df['price'] = -1
     return df
