@@ -6,31 +6,12 @@ from pandas import DataFrame
 
 from model.DomObject import DomObject
 from service.i_scraping_service import IScrapingService
-from service.ulitity import regex, extract_numbers
+from service.ulitity import regex, extract_numbers, convert_columns
 
 
 def cleansing(s: str):
     """文字列を正規化する"""
     return s.strip()
-
-
-def convert_columns(df: DataFrame, rename_columns: Dict[str, str], delete_columns: List[str]) -> DataFrame:
-    """DataFrameのカラム名を変換する
-
-    Parameters
-    ----------
-    df DataFrame
-    rename_columns リネームするカラム名
-    delete_columns 削除するカラム名
-
-    Returns
-    -------
-    加工後のDataFrame
-    """
-    df2 = df.rename(columns=rename_columns)
-    for d_column in delete_columns:
-        del df2[d_column]
-    return df2
 
 
 def get_panasonic_lens_list(scraping: IScrapingService) -> DataFrame:

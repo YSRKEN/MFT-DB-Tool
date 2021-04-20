@@ -1,8 +1,8 @@
 import re
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 import pandas
-from pandas import Series
+from pandas import Series, DataFrame
 
 from constant import Lens
 
@@ -85,3 +85,33 @@ def load_csv_lens(path: str, lens_mount: str) -> List[Lens]:
     df = df.fillna({'product_number': ''})
     df['mount'] = lens_mount
     return [Lens.from_dict(x) for x in df.to_dict(orient='records')]
+
+
+def convert_columns(df: DataFrame, rename_columns: Dict[str, str], delete_columns: List[str]) -> DataFrame:
+    """DataFrameのカラム名を変換する
+
+    Parameters
+    ----------
+    df DataFrame
+    rename_columns リネームするカラム名
+    delete_columns 削除するカラム名
+
+    Returns
+    -------
+    加工後のDataFrame
+    """
+    temp: List[Dict[str, any]] = []
+    for record in df.to_dict(orient='records'):
+        record: Dict[str, any] = record
+        record2: Dict[str, any] = {}
+        for key, val in record.items():
+            if key in delete_columns:
+                continue
+            if val != val:
+                continue
+            if key in rename_columns:
+                record2[rename_columns[key]] = val
+            else:
+                record2[key] = val
+        temp.append(record2)
+    return DataFrame.from_records(temp)
