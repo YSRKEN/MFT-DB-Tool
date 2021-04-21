@@ -16,7 +16,7 @@ def get_leica_lens_list(scraping: IScrapingService) -> DataFrame:
         'https://us.leica-camera.com/Photography/Leica-SL/SL-Lenses/Vario-Lenses'
     ]
     for page_url in page_list:
-        page = scraping.get_page(page_url)
+        page = scraping.get_page(page_url, cache=False)
         for div_element in page.find_all('div.h2-text-image-multi-layout.module.no-border'):
             h2_element = div_element.find('h2.headline-40')
             if h2_element is None:
