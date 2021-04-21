@@ -1,9 +1,10 @@
+from decimal import Decimal
 from typing import List, Tuple, Dict
 
 from pandas import DataFrame
 
 from service.i_scraping_service import IScrapingService
-
+from service.ulitity import extract_numbers, regex
 
 lens_name_table = {
     '10.5mm F0.95': 'Voigtlander NOKTON 10.5mm F0.95 Aspherical',
@@ -48,5 +49,68 @@ def get_cosina_lens_list(scraping: IScrapingService) -> DataFrame:
             if '希望小売価格' in text:
                 temp['希望小売価格'] = text.replace('\n', '')
         temp_list.append(temp)
+    df = DataFrame.from_records(temp_list)
 
-    return DataFrame.from_records(temp_list)
+    # 変換用に整形
+    df['maker'] = 'COSINA'
+
+    df['name'] = df['レンズ名']
+    del df['レンズ名']
+
+    df['product_number'] = ''
+
+    w, t = extract_numbers(df['焦点距離'], [], [r'(\d+\.?\d*)mm'])
+    df['wide_focal_length'] = [int(Decimal(x) * 2) for x in w]
+    df['telephoto_focal_length'] = [int(Decimal(x) * 2) for x in w]
+    del df['焦点距離']
+    del df['画角']
+    del df['レンズ構成']
+
+    w, t = extract_numbers(df['name'], [], [r'F(\d+\.?\d*)'])
+    df['wide_f_number'] = [float(x) for x in w]
+    df['telephoto_f_number'] = [float(x) for x in t]
+    del df['口径比']
+    del df['最小絞り']
+    del df['絞り羽根枚数']
+
+    w, t = extract_numbers(df['最短撮影距離'], [], [r'(\d+\.?\d+)m'])
+    df['wide_min_focus_distance'] = [int(Decimal(x).scaleb(3)) for x in w]
+    df['telephoto_min_focus_distance'] = [int(Decimal(x).scaleb(3)) for x in t]
+    del df['最短撮影距離']
+
+    m: List[str] = []
+    for record in df['最大撮影倍率']:
+        m.append(regex(record, r'1(:|：)(\d+\.?\d*)')[1])
+    df['max_photographing_magnification'] = [float(str((Decimal(1.0) / Decimal(x)).quantize(Decimal('0.01')))) for x in m]
+    del df['最大撮影倍率']
+
+    m: List[int] = []
+    for record in df['フィルターサイズ']:
+        m.append(int(regex(record, r'(\d+)mm')[0]))
+    df['filter_diameter'] = m
+    del df['フィルターサイズ']
+
+    df['is_drip_proof'] = False
+    df['has_image_stabilization'] = False
+    df['is_inner_zoom'] = True
+
+    di, le = extract_numbers(df['最大径×全長'], [r'φ(\d+\.?\d*)×(\d+\.?\d*)mm'], [])
+    df['overall_diameter'] = di
+    df['overall_length'] = le
+    del df['最大径×全長']
+
+    weight, _ = extract_numbers(df['重量'], [], [r'(\d+)g'])
+    df['weight'] = weight
+    del df['重量']
+
+    price, _ = extract_numbers(df['希望小売価格'], [], [r'￥([\d,]+)'])
+    df['price'] = [int(x.replace(',', '')) for x in price]
+    del df['希望小売価格']
+
+    df['mount'] = 'マイクロフォーサーズ'
+    df['url'] = df['URL']
+    del df['レンズフード']
+    del df['その他：']
+    del df['URL']
+
+    return df
