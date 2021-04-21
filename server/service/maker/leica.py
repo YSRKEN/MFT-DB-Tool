@@ -190,5 +190,5 @@ def get_leica_lens_list(scraping: IScrapingService) -> DataFrame:
     df['weight'] = weight
     del df['Weight']
 
-    df['price'] = -1
+    df['price'] = 0
     return df

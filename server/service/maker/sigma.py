@@ -78,9 +78,6 @@ def get_sigma_lens_list(scraping: IScrapingService) -> DataFrame:
             else:
                 lens_name2 = lens_name
 
-            print(lens_name2 + '  ' + lens_name)
-            print('  ' + lens_link)
-
             page = scraping.get_page(lens_link)
             temp_dict: Dict[str, str] = {
                 'mount': lens_mount,
@@ -90,9 +87,6 @@ def get_sigma_lens_list(scraping: IScrapingService) -> DataFrame:
             temp_dict.update(item_page_to_raw_dict(page, lens_mount))
             lens_raw_data_list.append(temp_dict)
     for lens_name, lens_link in lens_list_old:
-        print(lens_name)
-        print('  ' + lens_link)
-
         if 'DN' not in lens_name:
             # DNが含まれない＝ミラーレス用ではないので除外
             continue

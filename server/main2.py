@@ -90,10 +90,10 @@ def main(maker: List[str]):
 
 if __name__ == '__main__':
     maker_list = [
-        # 'Panasonic',
-        # 'OLYMPUS',
-        # 'SIGMA',
-        # 'LEICA',
+        'Panasonic',
+        'OLYMPUS',
+        'SIGMA',
+        'LEICA',
         'COSINA',
     ]
     main(maker_list)

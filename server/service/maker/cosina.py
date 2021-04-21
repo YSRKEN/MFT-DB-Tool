@@ -20,7 +20,7 @@ def get_cosina_lens_list(scraping: IScrapingService) -> DataFrame:
     # レンズのURL一覧を取得する
     lens_list: List[Tuple[str, str]] = []
     page = scraping.get_page('http://www.cosina.co.jp/seihin/voigtlander/mft-mount/index.html',
-                             encoding='cp932')
+                             encoding='cp932', cache=False)
     for a_element in page.find_all('td > a'):
         lens_name = a_element.find('img').attrs['alt']
         lens_url = 'http://www.cosina.co.jp/seihin/voigtlander/mft-mount/' + a_element.attrs['href']

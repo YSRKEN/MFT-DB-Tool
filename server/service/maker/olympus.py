@@ -76,7 +76,7 @@ def get_olympus_lens_list(scraping: IScrapingService) -> DataFrame:
             temp_dict[th_element2.text] = td_element.text
 
         # 必要な列を追加
-        temp_dict['name'] = lens_name
+        temp_dict['name'] = lens_name.replace('　', ' ')
         temp_dict['product_number'] = lens_product_number
 
         # 不要な列を削除
