@@ -10,7 +10,7 @@ from service.ulitity import convert_columns, extract_numbers, regex
 def get_laowa_lens_list(scraping: IScrapingService) -> DataFrame:
     # レンズのURL一覧を取得する
     lens_list: List[Tuple[str, str]] = []
-    page = scraping.get_page('https://www.laowa.jp/cat1/')
+    page = scraping.get_page('https://www.laowa.jp/cat1/', cache=False)
     for div_element in page.find_all('div.product3'):
         h3_element = div_element.find('h3')
         if h3_element is None:
@@ -43,6 +43,7 @@ def get_laowa_lens_list(scraping: IScrapingService) -> DataFrame:
                     # 記述が入れ替わっているので対策
                     temp2 = temp.copy()
                     temp2['マウント'] = temp['質量']
+                    temp2['質量'] = temp['マウント']
                     temp = temp2
             lens_raw_data_list.append(temp)
     df = DataFrame.from_records(lens_raw_data_list)
@@ -58,6 +59,8 @@ def get_laowa_lens_list(scraping: IScrapingService) -> DataFrame:
         '発売日', '絞り羽枚数', 'フォーカシング', 'フィルタースレッド', 'ワーキングディスタンス', '最大口径比',
         '絞り羽根枚数（F）', '絞り羽根枚数（T）', 'シフト量', '最小ワーキングディスタンス', '対応フォーマット',
     ])
+    if '対応フォーマット' in df:
+        del df['対応フォーマット']
     if None in df:
         del df[None]
     if '' in df:
@@ -122,5 +125,72 @@ def get_laowa_lens_list(scraping: IScrapingService) -> DataFrame:
     df['telephoto_min_focus_distance'] = t_fd_list
     del df['最短撮影距離']
 
-    return df
+    mag_list: List[float] = []
+    for val1, val2 in zip(df['最大撮影倍率'].values, df['mount'].values):
+        value = Decimal(0)
+        while True:
+            result = regex(val1, r'(\d+.?\d*)/(\d+.?\d*)倍')
+            if len(result) > 0:
+                value = Decimal(result[0]) / Decimal(result[1])
+                break
+            result = regex(val1, r'(\d+.?\d*):(\d+.?\d*)')
+            if len(result) > 0:
+                value = Decimal(result[0]) / Decimal(result[1])
+                break
+            result = regex(val1, r'(\d+.?\d*)倍')
+            if len(result) > 0:
+                value = Decimal(result[0])
+                break
+            result = regex(val1, r'(\d+.?\d*)')
+            if len(result) > 0:
+                value = Decimal(result[0])
+                break
+            break
+        if val2 == 'マイクロフォーサーズ':
+            mag_list.append(float(value * 2))
+        else:
+            mag_list.append(float(value))
+    df['max_photographing_magnification'] = mag_list
+    del df['最大撮影倍率']
 
+    fd_list: List[float] = []
+    for fd, name in zip(df['フィルター径'].values, df['name'].values):
+        if fd != fd or name == 'LAOWA 10-18mm F4.5-5.6 FE ZOOM':
+            fd_list.append(-1)
+            continue
+        result = regex(fd, r'(\d+.?\d*)mm')
+        if len(result) == 0:
+            fd_list.append(-1)
+            continue
+        fd_list.append(int(result[0]))
+    df['filter_diameter'] = fd_list
+    del df['フィルター径']
+
+    df['is_drip_proof'] = False
+    df['has_image_stabilization'] = False
+
+    i: List[bool] = []
+    for record in df.to_records():
+        if record['wide_focal_length'] == record['telephoto_focal_length']:
+            i.append(True)
+            continue
+        i.append(False)
+    df['is_inner_zoom'] = i
+
+    d, le = extract_numbers(df['サイズ'], [r'(\d+\.?\d*)[^\d]+(\d+\.?\d*)(mm|ｍｍ)'], [])
+    df['overall_diameter'] = [float(x) for x in d]
+    df['overall_length'] = [float(x) for x in le]
+    del df['サイズ']
+
+    weight: List[float] = []
+    for f in df['質量']:
+        result = regex(f, r'([\d,]+)(g|ｇ)')
+        if len(result) > 0:
+            weight.append(int(result[0].replace(',', '')))
+        else:
+            weight.append(-1)
+    df['weight'] = weight
+    del df['質量']
+
+    df['price'] = 0
+    return df
