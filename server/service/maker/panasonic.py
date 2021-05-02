@@ -4,7 +4,6 @@ from typing import List, Dict, Set
 import pandas
 from pandas import DataFrame
 
-from model.DomObject import DomObject
 from service.i_scraping_service import IScrapingService
 from service.ulitity import regex, extract_numbers, convert_columns
 

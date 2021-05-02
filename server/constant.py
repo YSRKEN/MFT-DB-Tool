@@ -2,8 +2,6 @@ from dataclasses import dataclass
 
 from dataclasses_json import dataclass_json
 
-DATABASE_PATH = 'database.db'
-
 
 @dataclass_json
 @dataclass
