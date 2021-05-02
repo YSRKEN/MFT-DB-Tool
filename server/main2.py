@@ -7,6 +7,7 @@ from service.i_database_service import IDataBaseService
 from service.i_scraping_service import IScrapingService
 from service.lxml_scraping_service import LxmlScrapingService
 from service.maker.cosina import get_cosina_lens_list
+from service.maker.laowa import get_laowa_lens_list
 from service.maker.leica import get_leica_lens_list
 from service.maker.olympus import get_olympus_lens_list
 from service.maker.panasonic import get_panasonic_lens_list, get_panasonic_old_lens_list
@@ -63,8 +64,14 @@ def main(maker: List[str]):
         else:
             df = pandas.concat([df, df6])
 
+    if 'LAOWA' in maker:
+        # LAOWA
+        df7 = get_laowa_lens_list(scraping)
+        if len(df) == 0:
+            df = df7
+        else:
+            df = pandas.concat([df, df7])
 
-    # LAOWA
     # その他(TAMRON・Tokina・KOWA・安原製作所・SAMYANG・DZOFilm・中一光学・七工匠・銘匠光学・Vazen・KAMLAN・ヨンヌオ)
 
     column_list = ['maker', 'name', 'product_number', 'wide_focal_length', 'telephoto_focal_length', 'wide_f_number',
@@ -95,5 +102,6 @@ if __name__ == '__main__':
         'SIGMA',
         'LEICA',
         'COSINA',
+        'LAOWA',
     ]
     main(maker_list)
