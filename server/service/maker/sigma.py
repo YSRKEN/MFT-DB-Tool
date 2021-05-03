@@ -34,7 +34,7 @@ def item_page_to_raw_dict(page: DomObject, lens_mount: str) -> Dict[str, any]:
                 if lens_mount_ == 'マイクロフォーサーズ' and 'マイクロフォーサーズ' in li_element.full_text:
                     value = li_element.full_text.replace('マイクロフォーサーズマウント', '').strip().strip('\n').replace('\n', ' ')
                     output[key] = value
-                if lens_mount_ == 'ライカLマウント' and 'L マウント' in li_element.full_text:
+                if lens_mount_ == 'ライカL' and 'L マウント' in li_element.full_text:
                     value = li_element.full_text.replace('L マウント', '').strip().strip('\n').replace('\n', ' ')
                     output[key] = value
     return output
@@ -68,7 +68,7 @@ def get_sigma_lens_list(scraping: IScrapingService) -> DataFrame:
 
     # レンズごとに情報を取得する
     lens_raw_data_list: List[Dict[str, any]] = []
-    for lens_list, lens_mount in [(lens_list_mft, 'マイクロフォーサーズ'), (lens_list_l, 'ライカLマウント')]:
+    for lens_list, lens_mount in [(lens_list_mft, 'マイクロフォーサーズ'), (lens_list_l, 'ライカL')]:
         for lens_name, lens_link in lens_list:
             if 'lenses/c' in lens_link and '| Contemporary' not in lens_name:
                 lens_name2 = lens_name + ' | Contemporary'

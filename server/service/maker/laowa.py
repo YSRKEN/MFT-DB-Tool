@@ -71,7 +71,7 @@ def get_laowa_lens_list(scraping: IScrapingService) -> DataFrame:
         if 'マイクロフォーサーズ' in mount_temp:
             mount_list.append('マイクロフォーサーズ')
         elif 'Leica L' in mount_temp:
-            mount_list.append('ライカLマウント')
+            mount_list.append('ライカL')
         else:
             mount_list.append('')
     df['mount'] = mount_list
@@ -85,7 +85,7 @@ def get_laowa_lens_list(scraping: IScrapingService) -> DataFrame:
         if mount == 'マイクロフォーサーズ':
             w_list2.append(int((Decimal(w) * 2).quantize(Decimal('1'))))
             t_list2.append(int((Decimal(t) * 2).quantize(Decimal('1'))))
-        elif mount == 'ライカLマウント':
+        elif mount == 'ライカL':
             w_list2.append(int(w))
             t_list2.append(int(t))
     df['wide_focal_length'] = w_list2

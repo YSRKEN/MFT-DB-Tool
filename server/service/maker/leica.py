@@ -50,7 +50,7 @@ def get_leica_lens_list(scraping: IScrapingService) -> DataFrame:
 
     # 変換用に整形
     df['maker'] = 'LEICA'
-    df['mount'] = 'ライカLマウント'
+    df['mount'] = 'ライカL'
     df = convert_columns(df, {
         'Order Number': 'Order number',
         'Order-number': 'Order number',
