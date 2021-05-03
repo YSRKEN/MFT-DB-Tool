@@ -63,7 +63,7 @@ const App: React.FC = () => {
   useEffect(() => {
     setQueryParameter(queryListToqueryString(queryList));
   }, [queryList]);
-  
+
   // 自動でフィルタしておく
   useEffect(() => {
     setLensList2(calcFilteredLensList(lensList, queryList));
@@ -104,7 +104,7 @@ const App: React.FC = () => {
 
   // 検索URLをクリップボードにコピー
   const copyUrl = () => {
-    if(navigator.clipboard){
+    if (navigator.clipboard) {
       navigator.clipboard.writeText("https://mft-db-tool.web.app/" + queryParameter);
     }
   };
@@ -122,6 +122,8 @@ const App: React.FC = () => {
         <span>　</span>
         <a href="https://twitter.com/YSRKEN">作者のTwitter</a>
         <span>　</span>
+        <span>最終更新日：2021/05/03</span>
+        <span>　</span>
         <TwitterShareButton url={"https://mft-db-tool.web.app/"} title={"レンズデータベース(マイクロフォーサーズ, ライカL マウント向け。スマホ対応！)"}>
           <TwitterIcon size={32} round />
         </TwitterShareButton>
@@ -137,7 +139,7 @@ const App: React.FC = () => {
           ・検索条件を表すボタンは、同種の検索条件追加操作で上書きされます。<br />
           　(例：フィルター径を52mm→62mmに変更する)<br />
           ・レンズ一覧において「詳細」ボタンを押すと、そのレンズの詳細情報が表示されます。<br />
-          ・検索条件を含めたURLをシェアしたり、クリップボードにコピーしたりできます。<br/>
+          ・検索条件を含めたURLをシェアしたり、クリップボードにコピーしたりできます。<br />
           ・当WebアプリはPWA技術に対応しています。スマホで見ている場合、Webページを「ホーム画面に追加」することができます。<br />
           　(ホーム画面に追加すると、ホーム画面のアイコンをタップするだけで起動できる)
           </p>

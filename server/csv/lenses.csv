@@ -1,0 +1,40 @@
+﻿maker,name,product_number,wide_focal_length,telephoto_focal_length,wide_f_number,telephoto_f_number,wide_min_focus_distance,telephoto_min_focus_distance,max_photographing_magnification,filter_diameter,is_drip_proof,has_image_stabilization,is_inner_zoom,overall_diameter,overall_length,weight,price,mount,url
+DZOFilm,Linglung 10-24mm T2.9/feet,,20,48,2.9,2.9,610,610,0,77,0,0,1,80,148.9,1100,217800,マイクロフォーサーズ,http://en.dzofilm.com/linglung.html
+DZOFilm,Linglung 20-70mm T2.9/feet,,40,140,2.9,2.9,790,790,0,77,0,0,1,80,153.3,1100,193600,マイクロフォーサーズ,http://en.dzofilm.com/linglung.html
+KAMLAN,KAMLAN 32mm F1.1,,64,64,1.1,1.1,400,400,0,62,0,0,1,92,70,601,25650,マイクロフォーサーズ,https://www.cameramon.jp/SHOP/KAM0025.html
+KAMLAN,KAMLAN 15mm F2,,30,30,2,2,300,300,0,62,0,0,1,63,56,254,21927,マイクロフォーサーズ,https://www.cameramon.jp/SHOP/KAM0021.html
+KAMLAN,KAMLAN 50mm F1.1 II,,100,100,1.1,1.1,400,400,0,62,0,0,1,72,68,563,25184,マイクロフォーサーズ,https://www.cameramon.jp/SHOP/KAM0017.html
+KAMLAN,KAMLAN FS 21mm F1.8,,42,42,1.8,1.8,120,120,0,52,0,0,1,58,57,262,21764,マイクロフォーサーズ,https://www.cameramon.jp/SHOP/KAM0013.html
+KAMLAN,KAMLAN FS 50mm F1.1,,100,100,1.1,1.1,500,500,0,52,0,0,1,56,59,248,21764,マイクロフォーサーズ,https://www.cameramon.jp/SHOP/KAM0009.html
+KAMLAN,KAMLAN FS 28mm F1.4,,56,56,1.4,1.4,250,250,0,52,0,0,1,58,66,348,21764,マイクロフォーサーズ,https://www.cameramon.jp/SHOP/KAM0005.html
+KAMLAN,KAMLAN FS 7.5mm F3.2 MFT,,15,15,3.2,3.2,100,100,0,-1,0,0,1,48,58,250,21764,マイクロフォーサーズ,https://www.cameramon.jp/SHOP/KAM0001.html
+KOWA,KOWA PROMINAR 8.5mm F2.8,,17,17,2.8,2.8,200,200,0.14,86,0,0,1,71.5,86.8,440,116000,マイクロフォーサーズ,http://www.kowa-prominar.ne.jp/product/prominar_lenses/mft.html
+KOWA,KOWA PROMINAR 12mm F1.8,,24,24,1.8,1.8,200,200,0.19,72,0,0,1,76.5,90.5,475,109000,マイクロフォーサーズ,http://www.kowa-prominar.ne.jp/product/prominar_lenses/mft.html
+KOWA,KOWA PROMINAR 25mm F1.8,,50,50,1.8,1.8,250,250,0.28,55,0,0,1,60,94,400,89000,マイクロフォーサーズ,http://www.kowa-prominar.ne.jp/product/prominar_lenses/mft.html
+TAMRON,14-150mm F/3.5-5.8 Di III (Model C001),C001,28,300,3.5,5.8,500,500,0.53,52,0,0,0,63.5,80.4,285,65000,マイクロフォーサーズ,https://www.tamron.jp/product/lenses/c001.html
+Tokina,Reflex 300mm F6.3 MF MACRO,,600,600,6.3,6.3,800,800,1,55,0,0,1,66,66,298,40000,マイクロフォーサーズ,https://www.kenko-tokina.co.jp/camera-lens/tokina/macro-lenses/reflex_300mm_f63_mf_macro/
+Tokina,ミラーレンズ400mm F8 N II,,800,800,8,8,1150,1150,0.8,67,0,0,1,74,112,495,22000,マイクロフォーサーズ,https://www.kenko-tokina.co.jp/camera-lens/kenko_cameralens/4961607423400.html
+銘匠光学,TTArtisan 11mm f/2.8 Fisheye,,11,11,2.8,2.8,170,170,0,-1,0,0,1,67,89,510,29700,ライカL,http://www.stkb.jp/shop/shopdetail.html?brandcode=000000001355&search=%A5%E9%A5%A4%A5%ABL&sort=
+銘匠光学,TTArtisan 50mm f/1.2 C,,100,100,1.2,1.2,500,500,0,52,0,0,1,62,55,335,13950,マイクロフォーサーズ,http://stkb.co.jp/info/?p=15879
+銘匠光学,TTArtisan 35mm f/1.4 C,,70,70,1.4,1.4,280,280,0,39,0,0,1,56,50,180,8910,マイクロフォーサーズ,http://stkb.co.jp/info/?p=15468
+Vazen,VAZEN 28MM T2.2 1.8X アナモフィックレンズ,,56,56,2.2,2.2,820,820,0,77,0,0,1,80,107,720,439780,マイクロフォーサーズ,https://prtimes.jp/main/html/rd/p/000000002.000063473.html
+Vazen,VAZEN 40MM T2 1.8X アナモフィックレンズ,,80,80,2,2,820,820,0,95,0,0,1,110,175,1800,439780,マイクロフォーサーズ,https://prtimes.jp/main/html/rd/p/000000002.000063473.html
+Vazen,VAZEN 65MM T2 1.8X アナモフィックレンズ,,130,130,2,2,1090,1090,0,86,0,0,1,105,185,1680,439780,マイクロフォーサーズ,https://prtimes.jp/main/html/rd/p/000000002.000063473.html
+安原製作所,MOMO(M),,56,56,6.4,6.4,0,0,0,37,0,0,0,61,35,126,21000,マイクロフォーサーズ,http://www.yasuhara.co.jp/momo/index.html
+安原製作所,NANOHA x5,,0,0,11,11,0,0,10,0,0,0,0,61,84,310,47000,マイクロフォーサーズ,http://www.yasuhara.co.jp/nanoha/index.html
+YONGNUO,YONGNUO YN42.5mm F1.7,,85,85,1.7,1.7,300,300,0.3,52,0,0,1,62,55,146,30371,マイクロフォーサーズ,https://www.amazon.co.jp/dp/B07XXWRJ51
+中一光学,SPEEDMASTER 35mm F0.95 II,,70,70,0.95,0.95,350,350,0.26,55,0,0,1,62,58,390,74800,マイクロフォーサーズ,http://www.zyoptics.jp/products/2021/04/speedmaster-09535mm.php
+中一光学,SPEEDMASTER 17mm F0.95,,34,34,0.95,0.95,300,300,0.14,58,0,0,1,66,75,460,50000,マイクロフォーサーズ,http://www.zyoptics.jp/products/2020/11/speedmaster-17mm-f095.php
+中一光学,FREEWALKER 20mm F2.0 SUPER MACRO 4-4.5:1,,40,40,2,2,120,120,9,-1,0,0,1,62,90,290,25000,マイクロフォーサーズ,http://www.zyoptics.jp/products/2017/03/freewalker-20mm-f20.php
+中一光学,SPEEDMASTER 25mm F0.95,,50,50,0.95,0.95,250,250,0.26,43,0,0,1,54,55,230,50000,マイクロフォーサーズ,http://www.zyoptics.jp/products/2016/10/speedmaster-09525mm.php
+中一光学,FREEWALKER 42.5mm F1.2,,85,85,1.2,1.2,450,450,0.2,49,0,0,1,60,57,290,40000,マイクロフォーサーズ,http://www.zyoptics.jp/products/2016/07/freewalker-12425mm.php
+中一光学,APO 85mm F2.8 SUPER MACRO 1-5X,,170,170,2.8,2.8,100,100,10,58,0,0,0,67,155,830,65000,マイクロフォーサーズ,http://www.zyoptics.jp/products/2020/03/apo-85mm-f28-super-macro-1-5x.php
+七工匠,7Artisans 18mm F6.3,,36,36,6.3,6.3,350,350,0,-1,0,0,1,56,10,49,8190,マイクロフォーサーズ,https://www.7artisans.com/en/h-pd-53.html#_pp=2_3818
+七工匠,7Artisans 7.5mm F2.8 Fish-eye II,,15,15,2.8,2.8,120,120,0,-1,0,0,1,62.5,59,280,19800,マイクロフォーサーズ,https://www.7artisans.com/en/h-pd-21.html#_pp=105_3765
+七工匠,7Artisans 12mm F2.8,,24,24,2.8,2.8,200,200,0,-1,0,0,1,63,67,290,23940,マイクロフォーサーズ,https://www.7artisans.com/en/h-pd-27.html#_pp=105_3765
+七工匠,7Artisans 25mm F1.8,,50,50,1.8,1.8,180,180,0,46,0,0,1,60,37,150,9900,マイクロフォーサーズ,https://www.7artisans.com/en/h-pd-22.html#_pp=105_3765
+七工匠,7Artisans 35mm F1.2,,70,70,1.2,1.2,350,350,0,43,0,0,1,57,38,150,20700,マイクロフォーサーズ,https://www.7artisans.com/en/h-pd-29.html#_pp=105_3765
+七工匠,7Artisans 50mm F1.8,,100,100,1.8,1.8,500,500,0,52,0,0,1,60,41,170,9900,マイクロフォーサーズ,https://www.7artisans.com/en/h-pd-28.html#_pp=105_3765
+七工匠,7Artisans 55mm F1.4,,110,110,1.4,1.4,350,350,0,49,0,0,1,57,60,280,14580,マイクロフォーサーズ,https://www.7artisans.com/en/h-pd-25.html#_pp=105_3765
+七工匠,7Artisans 60mm F2.8 Macro,,120,120,2.8,2.8,260,260,2,37,0,0,1,65,100,530,19800,マイクロフォーサーズ,https://www.7artisans.com/h-pd-41.html#_pp=105_3864
+七工匠,7Artisans 55mm F1.4,,55,55,1.4,1.4,350,350,0,49,0,0,1,57,60,280,14580,ライカL,https://www.7artisans.com/en/h-pd-25.html#_pp=105_3765

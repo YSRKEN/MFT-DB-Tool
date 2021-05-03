@@ -37,18 +37,3 @@ class SqliteDataBaseService(IDataBaseService):
             for q, p in zip(query, parameter):
                 cur.execute(q, p)
             conn.commit()
-
-
-if __name__ == '__main__':
-    service: IDataBaseService = SqliteDataBaseService('database.db')
-    service.query('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT, age INTEGER)')
-    service.query('DELETE FROM users')
-    service.query('INSERT INTO users (id, name, age) VALUES (?, ?, ?)', (1, '太郎', 23))
-    service.many_query([
-        'INSERT INTO users (id, name, age) VALUES (?, ?, ?)',
-        'INSERT INTO users (id, name, age) VALUES (?, ?, ?)'
-    ], [
-        (2, '次郎', 22),
-        (3, '三郎', 21)
-    ])
-    print(service.select('SELECT * FROM users'))
