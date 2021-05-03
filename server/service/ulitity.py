@@ -67,26 +67,6 @@ def extract_numbers(series: Series, pair_data_patterns: List[str], single_data_p
     return list_a, list_b
 
 
-def load_csv_lens(path: str, lens_mount: str) -> List[Lens]:
-    """CSVファイルからデータを読み込む
-
-    Parameters
-    ----------
-    path: str
-        ファイルパス
-    lens_mount: str
-        レンズマウント
-
-    Returns
-    -------
-        取得結果
-    """
-    df = pandas.read_csv(path, dtype={'product_number': str})
-    df = df.fillna({'product_number': ''})
-    df['mount'] = lens_mount
-    return [Lens.from_dict(x) for x in df.to_dict(orient='records')]
-
-
 def convert_columns(df: DataFrame, rename_columns: Dict[str, str], delete_columns: List[str]) -> DataFrame:
     """DataFrameのカラム名を変換する
 

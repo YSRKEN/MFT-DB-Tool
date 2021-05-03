@@ -3,6 +3,7 @@ from typing import List
 import pandas
 from pandas import DataFrame
 
+from constant import Lens
 from service.i_database_service import IDataBaseService
 from service.i_scraping_service import IScrapingService
 from service.lxml_scraping_service import LxmlScrapingService
@@ -27,6 +28,7 @@ def main(maker: List[str]):
 
     if 'Panasonic' in maker:
         # Panasonic
+        print('【Panasonic】')
         df1 = get_panasonic_lens_list(scraping)
         if len(df) == 0:
             df = df1
@@ -35,6 +37,7 @@ def main(maker: List[str]):
 
     if 'OLYMPUS' in maker:
         # OLYMPUS
+        print('【OLYMPUS】')
         df3 = get_olympus_lens_list(scraping)
         if len(df) == 0:
             df = df3
@@ -43,6 +46,7 @@ def main(maker: List[str]):
 
     if 'SIGMA' in maker:
         # SIGMA
+        print('【SIGMA】')
         df4 = get_sigma_lens_list(scraping)
         if len(df) == 0:
             df = df4
@@ -51,6 +55,7 @@ def main(maker: List[str]):
 
     if 'LEICA' in maker:
         # LEICA
+        print('【LEICA】')
         df5 = get_leica_lens_list(scraping)
         if len(df) == 0:
             df = df5
@@ -59,6 +64,7 @@ def main(maker: List[str]):
 
     if 'COSINA' in maker:
         # COSINA
+        print('【COSINA】')
         df6 = get_cosina_lens_list(scraping)
         if len(df) == 0:
             df = df6
@@ -67,6 +73,7 @@ def main(maker: List[str]):
 
     if 'LAOWA' in maker:
         # LAOWA
+        print('【LAOWA】')
         df7 = get_laowa_lens_list(scraping)
         if len(df) == 0:
             df = df7
@@ -75,6 +82,7 @@ def main(maker: List[str]):
 
     if 'SAMYANG' in maker:
         # SAMYANG
+        print('【SAMYANG】')
         df8 = get_samyang_lens_list(scraping)
         if len(df) == 0:
             df = df8
@@ -83,6 +91,13 @@ def main(maker: List[str]):
 
     # その他(DZOFilm・KAMLAN・KOWA・TAMRON・Tokina・銘匠光学・Vazen・安原製作所・ヨンヌオ・中一光学・七工匠)
     # 銘匠光学はTTArtisan、ヨンヌオはYONGNUO、中一光学はZhongyi Optics Electronics、七工匠は7artisansとする
+    if 'Other' in maker:
+        print('【Other】')
+        df9 = pandas.read_csv('csv/lenses.csv', dtype={'product_number': str})
+        if len(df) == 0:
+            df = df9
+        else:
+            df = pandas.concat([df, df9])
 
     column_list = ['maker', 'name', 'product_number', 'wide_focal_length', 'telephoto_focal_length', 'wide_f_number',
                    'telephoto_f_number', 'wide_min_focus_distance', 'telephoto_min_focus_distance',
@@ -102,12 +117,15 @@ def main(maker: List[str]):
         temp.append(temp2)
     df = DataFrame.from_records(temp)
 
-    df.to_csv('df.csv', index=False, encoding='utf_8_sig')
+    # df.to_csv('df.csv', index=False, encoding='utf_8_sig')
+    lens_list = [Lens.from_dict(x) for x in df.to_dict(orient='records')]
+    with open('lens_data.json', 'w') as f:
+        f.write(Lens.schema().dumps(lens_list, many=True))
 
 
 if __name__ == '__main__':
     maker_list = [
         'Panasonic', 'OLYMPUS', 'SIGMA', 'LEICA', 'COSINA', 'LAOWA',
-        'SAMYANG',
+        'SAMYANG', 'Other'
     ]
     main(maker_list)
