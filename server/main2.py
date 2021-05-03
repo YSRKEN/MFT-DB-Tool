@@ -11,6 +11,7 @@ from service.maker.laowa import get_laowa_lens_list
 from service.maker.leica import get_leica_lens_list
 from service.maker.olympus import get_olympus_lens_list
 from service.maker.panasonic import get_panasonic_lens_list, get_panasonic_old_lens_list
+from service.maker.samyang import get_samyang_lens_list
 from service.maker.sigma import get_sigma_lens_list
 from service.sqlite_database_service import SqliteDataBaseService
 
@@ -72,7 +73,16 @@ def main(maker: List[str]):
         else:
             df = pandas.concat([df, df7])
 
-    # その他(TAMRON・Tokina・KOWA・安原製作所・SAMYANG・DZOFilm・中一光学・七工匠・銘匠光学・Vazen・KAMLAN・ヨンヌオ)
+    if 'SAMYANG' in maker:
+        # SAMYANG
+        df8 = get_samyang_lens_list(scraping)
+        if len(df) == 0:
+            df = df8
+        else:
+            df = pandas.concat([df, df8])
+
+    # その他(DZOFilm・KAMLAN・KOWA・TAMRON・Tokina・銘匠光学・Vazen・安原製作所・ヨンヌオ・中一光学・七工匠)
+    # 銘匠光学はTTArtisan、ヨンヌオはYONGNUO、中一光学はZhongyi Optics Electronics、七工匠は7artisansとする
 
     column_list = ['maker', 'name', 'product_number', 'wide_focal_length', 'telephoto_focal_length', 'wide_f_number',
                    'telephoto_f_number', 'wide_min_focus_distance', 'telephoto_min_focus_distance',
@@ -97,11 +107,7 @@ def main(maker: List[str]):
 
 if __name__ == '__main__':
     maker_list = [
-        'Panasonic',
-        'OLYMPUS',
-        'SIGMA',
-        'LEICA',
-        'COSINA',
-        'LAOWA',
+        # 'Panasonic', 'OLYMPUS', 'SIGMA', 'LEICA', 'COSINA', 'LAOWA',
+        'SAMYANG',
     ]
     main(maker_list)
