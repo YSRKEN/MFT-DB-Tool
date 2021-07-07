@@ -28,7 +28,9 @@ def get_leica_lens_list(scraping: IScrapingService) -> DataFrame:
                 continue
             lens_name = h2_element.full_text.replace(span_element.full_text, '').replace('\n', ' ')\
                 .replace('–', '-').strip()
-            lens_url = 'https://us.leica-camera.com' + a_element.attrs['href']
+            lens_url = a_element.attrs['href']
+            if 'https://' not in lens_url:
+                lens_url = 'https://us.leica-camera.com' + lens_url
             if 'f/' not in lens_name and '-SL' not in lens_name:
                 continue
             lens_list.append((lens_name, lens_url))
@@ -54,6 +56,7 @@ def get_leica_lens_list(scraping: IScrapingService) -> DataFrame:
     df = convert_columns(df, {
         'Order Number': 'Order number',
         'Order-number': 'Order number',
+        'Black, anodized': 'Order number',
         'Focus range': 'Working range',
         'Largest scale': 'Largest reproduction ratio',
         'Filter thread': 'Filter mount',
@@ -108,21 +111,40 @@ def get_leica_lens_list(scraping: IScrapingService) -> DataFrame:
     df['telephoto_f_number'] = t
 
     # wide_min_focus_distance, telephoto_min_focus_distance
-    w, t = extract_numbers(df['Working range'], [],
-                           [r'(\d+\.?\d*)mm to', r'(\d+\.?\d*) m to', r'to (\d+\.?\d*) m'])
-    # 微調整
-    for i in range(0, len(df)):
-        if 'mm to' not in df['Working range'].values[i]:
-            w[i] = str(int(Decimal(w[i]).scaleb(3)))
-            t[i] = str(int(Decimal(t[i]).scaleb(3)))
-    df['wide_min_focus_distance'] = [int(x) for x in w]
-    df['telephoto_min_focus_distance'] = [int(x) for x in t]
+    w: List[int] = []
+    t: List[int] = []
+    for record in list(df['Working range'].values):
+        match_result = regex(record, r'(\d+,\d*) m to infinity.+(\d+,\d*) m to infinity')
+        if len(match_result) > 0:
+            w.append(int(Decimal(match_result[0].replace(',', '.')).scaleb(3)))
+            t.append(int(Decimal(match_result[1].replace(',', '.')).scaleb(3)))
+            continue
+        match_result = regex(record, r'(\d+\.?\d*) m to infinity')
+        if len(match_result) > 0:
+            w.append(int(Decimal(match_result[0]).scaleb(3)))
+            t.append(int(Decimal(match_result[0]).scaleb(3)))
+            continue
+        match_result = regex(record, r'∞ to (\d+\.?\d*) m')
+        if len(match_result) > 0:
+            w.append(int(Decimal(match_result[0]).scaleb(3)))
+            t.append(int(Decimal(match_result[0]).scaleb(3)))
+            continue
+        match_result = regex(record, r'(\d+\.?\d*)mm to infinity')
+        if len(match_result) > 0:
+            w.append(int(match_result[0]))
+            t.append(int(match_result[0]))
+            continue
+        w.append(0)
+        t.append(0)
+    df['wide_min_focus_distance'] = w
+    df['telephoto_min_focus_distance'] = t
+
     del df['Working range']
 
     # max_photographing_magnification
     m: List[float] = []
     for record in df.to_records():
-        denominator = regex(record['Largest reproduction ratio'], r'1:(\d+\.?\d*)')
+        denominator = regex(record['Largest reproduction ratio'].replace(',', '.'), r'1:(\d+\.?\d*)')
         m.append(float((Decimal('1') / Decimal(denominator[0])).quantize(Decimal('0.01'))))
     df['max_photographing_magnification'] = m
     del df['Largest reproduction ratio']

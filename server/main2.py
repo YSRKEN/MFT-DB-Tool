@@ -117,10 +117,10 @@ def main(maker: List[str]):
         temp.append(temp2)
     df = DataFrame.from_records(temp)
 
-    df.to_csv('df.csv', index=False, encoding='utf_8_sig')
+    # df.to_csv('df.csv', index=False, encoding='utf_8_sig')
     lens_list = [Lens.from_dict(x) for x in df.to_dict(orient='records')]
-    with open('lens_data.json', 'w') as f:
-        f.write(Lens.schema().dumps(lens_list, many=True))
+    with open('lens_data.json', 'w', encoding='UTF-8') as f:
+        f.write(Lens.schema().dumps(lens_list, many=True, ensure_ascii=False, indent=2, sort_keys=True))
 
 
 if __name__ == '__main__':
