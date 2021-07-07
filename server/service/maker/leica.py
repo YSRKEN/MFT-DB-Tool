@@ -28,7 +28,9 @@ def get_leica_lens_list(scraping: IScrapingService) -> DataFrame:
                 continue
             lens_name = h2_element.full_text.replace(span_element.full_text, '').replace('\n', ' ')\
                 .replace('–', '-').strip()
-            lens_url = 'https://us.leica-camera.com' + a_element.attrs['href']
+            lens_url = a_element.attrs['href']
+            if 'https://' not in lens_url:
+                lens_url = 'https://us.leica-camera.com' + lens_url
             if 'f/' not in lens_name and '-SL' not in lens_name:
                 continue
             lens_list.append((lens_name, lens_url))
@@ -54,6 +56,7 @@ def get_leica_lens_list(scraping: IScrapingService) -> DataFrame:
     df = convert_columns(df, {
         'Order Number': 'Order number',
         'Order-number': 'Order number',
+        'Black, anodized': 'Order number',
         'Focus range': 'Working range',
         'Largest scale': 'Largest reproduction ratio',
         'Filter thread': 'Filter mount',
