@@ -1,10 +1,7 @@
 import re
 from typing import List, Tuple, Dict
 
-import pandas
 from pandas import Series, DataFrame
-
-from constant import Lens
 
 
 def regex(text: str, pattern: str) -> List[str]:
