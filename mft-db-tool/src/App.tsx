@@ -122,7 +122,7 @@ const App: React.FC = () => {
         <span>　</span>
         <a href="https://twitter.com/YSRKEN">作者のTwitter</a>
         <span>　</span>
-        <span>最終更新日：2021/09/02</span>
+        <span>最終更新日：2021/09/16</span>
         <span>　</span>
         <TwitterShareButton url={"https://mft-db-tool.web.app/"} title={"レンズデータベース(マイクロフォーサーズ, ライカL マウント向け。スマホ対応！)"}>
           <TwitterIcon size={32} round />
