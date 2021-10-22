@@ -57,6 +57,9 @@ def get_sigma_lens_list(scraping: IScrapingService) -> DataFrame:
             lens_list_mft.append((lens_name, lens_link))
         if 'l-mount' in li_element.attrs['data-lens-mount']:
             lens_list_l.append((lens_name, lens_link))
+        # 特殊処理
+        if '35mm F1.4 DG HSM' in lens_name:
+            lens_list_l.append((lens_name, lens_link))
 
     page: DomObject = scraping.get_page('https://www.sigma-global.com/jp/lenses/discontinued/', cache=False)
     lens_list_old: List[Tuple[str, str]] = []
@@ -83,7 +86,8 @@ def get_sigma_lens_list(scraping: IScrapingService) -> DataFrame:
                 'name': lens_name2,
                 'url': lens_link
             }
-            temp_dict.update(item_page_to_raw_dict(page, lens_mount))
+            raw_dict = item_page_to_raw_dict(page, lens_mount)
+            temp_dict.update(raw_dict)
             lens_raw_data_list.append(temp_dict)
     for lens_name, lens_link in lens_list_old:
         if 'DN' not in lens_name:
@@ -138,7 +142,7 @@ def get_sigma_lens_list(scraping: IScrapingService) -> DataFrame:
     # min_focus_distance
     w, t = extract_numbers(df['最短撮影距離'],
                            [r'(\d+\.?\d*)-(\d+\.?\d*)cm', r'(\d+\.?\d*) \(W\)-(\d+\.?\d*) \(T\)cm',
-                            r'(\d+\.?\d*)\(W\) - (\d+\.?\d*)\(T\)cm'],
+                            r'(\d+\.?\d*)\(W\) - (\d+\.?\d*)\(T\)cm', f'(\d+\.?\d*)（W）-(\d+\.?\d*)（T）cm'],
                            [r'(\d+\.?\d*)cm'])
 
     df['wide_min_focus_distance'] = [int(Decimal(x).scaleb(1)) for x in w]
