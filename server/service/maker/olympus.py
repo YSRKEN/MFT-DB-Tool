@@ -107,6 +107,8 @@ def get_olympus_lens_list(scraping: IScrapingService) -> DataFrame:
             '手ぶれ補正性能',
             'ズーム',
             'ズーム方式',
+            '35mm判換算',
+            '絞り範囲',
         ]
         for column in del_column_list:
             if column in temp_dict:
@@ -128,6 +130,9 @@ def get_olympus_lens_list(scraping: IScrapingService) -> DataFrame:
         if '防滴性能 / 防塵機構' in temp_dict:
             temp_dict['防滴処理'] = temp_dict['防滴性能 / 防塵機構']
             del temp_dict['防滴性能 / 防塵機構']
+        if '防滴性能 / 防塵機構搭載' in temp_dict:
+            temp_dict['防滴処理'] = temp_dict['防滴性能 / 防塵機構搭載']
+            del temp_dict['防滴性能 / 防塵機構搭載']
         if '価格' in temp_dict:
             temp_dict['希望小売価格'] = temp_dict['価格']
             del temp_dict['価格']

@@ -116,6 +116,7 @@ def main(maker: List[str]):
                 temp2[key] = ''
         temp.append(temp2)
     df = DataFrame.from_records(temp)
+    del df['絞り範囲']
 
     # df.to_csv('df.csv', index=False, encoding='utf_8_sig')
     lens_list = [Lens.from_dict(x) for x in df.to_dict(orient='records')]
