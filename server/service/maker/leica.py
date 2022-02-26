@@ -36,10 +36,14 @@ def get_leica_lens_list(scraping: IScrapingService) -> DataFrame:
         page = scraping.get_page(lens_url)
         temp: Dict[str, str] = {'レンズ名': lens_name, 'URL': lens_url}
         for tr_element in page.find_all('tr'):
+            th_elements = tr_element.find_all('th')
             td_elements = tr_element.find_all('td')
-            if len(td_elements) < 2:
+            if len(td_elements) >= 2:
+                temp[td_elements[0].text] = td_elements[1].text
+            elif len(th_elements) >= 1 and len(td_elements) >= 1:
+                temp[th_elements[0].text] = td_elements[0].text
+            else:
                 continue
-            temp[td_elements[0].text] = td_elements[1].text
         lens_raw_data_list.append(temp)
     df = DataFrame.from_records(lens_raw_data_list)
 
@@ -84,11 +88,11 @@ def get_leica_lens_list(scraping: IScrapingService) -> DataFrame:
     ])
 
     # product_number
-    df['product_number'] = df['Order number'].map(lambda x: x.replace(' ', ''))
+    df['product_number'] = df['Order number'].map(lambda x: str(x).replace(' ', ''))
     del df['Order number']
 
     # wide_focal_length, telephoto_focal_length
-    w, t = extract_numbers(df['name'], [r'SL(\d+)-(\d+) f', r'SL (\d+)-(\d+) f'],
+    w, t = extract_numbers(df['name'], [r'SL (\d+)-(\d+)mm f', r'SL(\d+)-(\d+) f', r'SL (\d+)-(\d+) f'],
                            [r'SL(\d+) f', r'SL (\d+) f', r'SL 1:\d+\.?\d*/(\d+)'])
     df['wide_focal_length'] = w
     df['telephoto_focal_length'] = t
@@ -139,7 +143,7 @@ def get_leica_lens_list(scraping: IScrapingService) -> DataFrame:
     del df['Largest reproduction ratio']
 
     # filter_diameter
-    df['filter_diameter'] = df['Filter mount'].map(lambda x: int(x.replace('E', '')))
+    df['filter_diameter'] = df['Filter mount'].map(lambda x: int(str(x).replace('E', '')))
     del df['Filter mount']
 
     # is_drip_proof, has_image_stabilization, is_inner_zoom
