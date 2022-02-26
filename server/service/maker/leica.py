@@ -85,6 +85,7 @@ def get_leica_lens_list(scraping: IScrapingService) -> DataFrame:
         'Number of elements/groups',
         'Position of entrance pupil',
         'Smallest value',
+        'Number of aspherical lenses',
     ])
 
     # product_number

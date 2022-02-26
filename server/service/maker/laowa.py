@@ -129,6 +129,8 @@ def get_laowa_lens_list(scraping: IScrapingService) -> DataFrame:
     for val1, val2 in zip(df['最大撮影倍率'].values, df['mount'].values):
         value = Decimal(0)
         while True:
+            if val1 != val1:
+                break
             result = regex(val1, r'(\d+.?\d*)/(\d+.?\d*)倍')
             if len(result) > 0:
                 value = Decimal(result[0]) / Decimal(result[1])

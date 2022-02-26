@@ -116,7 +116,8 @@ def main(maker: List[str]):
                 temp2[key] = ''
         temp.append(temp2)
     df = DataFrame.from_records(temp)
-    del df['絞り範囲']
+    if '絞り範囲' in df:
+        del df['絞り範囲']
 
     # df.to_csv('df.csv', index=False, encoding='utf_8_sig')
     lens_list = [Lens.from_dict(x) for x in df.to_dict(orient='records')]
@@ -126,7 +127,6 @@ def main(maker: List[str]):
 
 if __name__ == '__main__':
     maker_list = [
-        'Panasonic', 'OLYMPUS', 'SIGMA', 'LEICA', 'COSINA', 'LAOWA',
-        'SAMYANG', 'Other'
+        'Panasonic', 'OLYMPUS', 'SIGMA', 'LEICA', 'COSINA', 'LAOWA', 'SAMYANG', 'Other',
     ]
     main(maker_list)
