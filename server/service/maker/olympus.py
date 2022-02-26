@@ -130,6 +130,9 @@ def get_olympus_lens_list(scraping: IScrapingService) -> DataFrame:
         if '防滴性能 / 防塵機構' in temp_dict:
             temp_dict['防滴処理'] = temp_dict['防滴性能 / 防塵機構']
             del temp_dict['防滴性能 / 防塵機構']
+        if '防滴性能／防塵機構' in temp_dict:
+            temp_dict['防滴処理'] = temp_dict['防滴性能／防塵機構']
+            del temp_dict['防滴性能／防塵機構']
         if '防滴性能 / 防塵機構搭載' in temp_dict:
             temp_dict['防滴処理'] = temp_dict['防滴性能 / 防塵機構搭載']
             del temp_dict['防滴性能 / 防塵機構搭載']
@@ -170,10 +173,17 @@ def get_olympus_lens_list(scraping: IScrapingService) -> DataFrame:
 
     # max_photographing_magnification
     w, t = extract_numbers(df['最大撮影倍率'],
-                           [r'(\d+\.?\d+)倍（35mm判換算 ?(\d+\.?\d+)倍相当）',
+                           [r'(\d+\.?\d+)倍 \(Wide\) ／ (\d+\.?\d+)倍 \(Tele\)',
+                            r'Wide：(\d+\.?\d+)倍／Tele:(\d+\.?\d+)倍',
                             r'(\d+\.?\d+)倍（Wide） / (\d+\.?\d+)倍（Tele）',
+                            r'Wide：(\d+\.?\d+)倍／Tele：(\d+\.?\d+)倍',
                             r'(\d+\.?\d+)倍（Wide）/ (\d+\.?\d+)倍（Tele）'],
-                           [r'^(\d+\.?\d+)倍'])
+                           [r'(\d+\.?\d+)倍（35mm判換算\d+\.?\d+倍相当）',
+                            r'(\d+\.?\d+)倍（35mm判換算 \d+\.?\d+倍相当）',
+                            r'(\d+\.?\d+)倍（Wide / Tele）',
+                            r'(\d+\.?\d+)倍 \(35mm判換算 \d+\.?\d+倍相当\)',
+                            r'(\d+\.?\d+)倍（35mm判換算 \d+\.?\d+倍）',
+                            r'(\d+\.?\d+)倍（マクロモード時）（35mm判換算 \d+\.?\d+倍）'])
     m: List[float] = []
     for a, b, text in zip(w, t, df['最大撮影倍率'].values):
         if a == b:
@@ -232,7 +242,8 @@ def get_olympus_lens_list(scraping: IScrapingService) -> DataFrame:
         r'Ø(\d+.?\d*)x (\d+.?\d*)mm',
         r'Ø(\d+.?\d*)x(\d+.?\d*)mm',
         r'⌀(\d+.?\d*)×(\d+.?\d*)mm',
-        r'Ø(\d+.?\d*)mm × (\d+.?\d*)mm'], [])
+        r'Ø(\d+.?\d*)mm × (\d+.?\d*)mm',
+        r'φ(\d+.?\d*)×(\d+.?\d*)mm'], [])
     df['overall_diameter'] = [float(x) for x in d]
     df['overall_length'] = [float(x) for x in le]
     del df['大きさ 最大径×全長']
